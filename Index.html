@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Hawker Centre Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Unified Shell Navigation Bar -->
+    <header>
+        <nav class="navbar">
+            <a class="logo" onclick="navigateTo('landing-view')">SG Hawker Management</a>
+            <ul class="nav-links" id="nav-menu">
+                <!-- Links change dynamically based on auth state -->
+                <li><a onclick="navigateTo('landing-view')">Home</a></li>
+                <li><a onclick="navigateTo('login-view')">Log In</a></li>
+                <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- VIEW 1: LANDING PAGE -->
+    <main id="landing-view" class="view active">
+        <section class="hero">
+            <h1>Singapore Hawker Centre Operations</h1>
+            <p>Empowering local operators, vendors, and National Environment Agency (NEA) officers to cleanly manage profiles, check metrics, monitor stalls, and log compliance tracking details seamlessly.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn-primary" style="border:none; font-size:1.1rem; cursor:pointer;" onclick="navigateTo('register-view')">Get Started Now</button>
+            </div>
+        </section>
+
+        <section class="features-grid">
+            <div class="feature-card">
+                <h3>Vendor Stalls</h3>
+                <p>Register profiles to handle digital menu entries, display promotional highlights, and view rental processing trends updates easily.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Patron Engagement</h3>
+                <p>Quickly browse diverse food menu options, log favorite dishes, view verification alerts, and track comprehensive order checkout histories.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Regulatory Audits</h3>
+                <p>NEA framework inspectors can record immediate sanitization scores, outline compliance text metrics, and issue historical health updates.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- VIEW 2: ACCOUNT REGISTRATION PAGE -->
+    <section id="register-view" class="view">
+        <div class="form-container">
+            <h2>Create Account</h2>
+            <div id="register-alert" class="alert"></div>
+            <form id="register-form" onsubmit="handleRegistration(event)">
+                <div class="form-group">
+                    <label for="reg-name">Full Name</label>
+                    <input type="text" id="reg-name" required placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" required placeholder="name@domain.com">
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">Account Type</label>
+                    <select id="reg-role" required>
+                        <option value="Patron">Patron / Customer</option>
+                        <option value="Vendor">Hawker Stall Vendor</option>
+                        <option value="NEA_Officer">NEA Inspection Officer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" required placeholder="Minimum 8 characters">
+                </div>
+                <div class="form-group">
+                    <label for="reg-confirm">Confirm Password</label>
+                    <input type="password" id="reg-confirm" required placeholder="Repeat password">
+                </div>
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- VIEW 3: LOGIN PAGE -->
+    <section id="login-view" class="view">
+        <div class="form-container">
+            <h2>Account Login</h2>
+            <div id="login-alert" class="alert"></div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="Enter your password">
+                </div>
+                <button type="submit">Log In</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- VIEW 4: AUTHENTICATED DASHBOARD (Prerequisite to demo route protection & log out) -->
+    <section id="dashboard-view" class="view">
+        <div class="dashboard-banner">
+            <h2>Welcome Back, <span id="user-display-name">User</span>!</h2>
+            <p style="color: #666; margin-top: 0.5rem;">Role Authentication: <strong id="user-display-role" style="color:var(--primary-color);">Guest</strong></p>
+            <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #eee;">
+            <p>Your secure session is active. You can now simulate standard navigation actions or proceed to safely terminate your session by using the navigation panel link above.</p>
+        </div>
+    </section>
+
+    <!-- Core Business Logic Script Engine -->
+    <script src="script.js"></script>
+</body>
+</html>
