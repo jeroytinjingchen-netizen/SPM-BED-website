@@ -1,0 +1,25 @@
+{
+  "name": "frontweb-assi",
+  "version": "1.0.0",
+  "description": "for all team members to do their work and share it",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeroytinjingchen-netizen/SPM-BED-website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jeroytinjingchen-netizen/SPM-BED-website/issues"
+  },
+  "homepage": "https://github.com/jeroytinjingchen-netizen/SPM-BED-website#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mssql": "^12.6.0"
+  }
+}
