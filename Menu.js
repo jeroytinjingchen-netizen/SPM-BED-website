@@ -1,4 +1,4 @@
-// Mock Database Array tailored to Appendix A Hawker Operations (Main, Side, Drink)
+// Mock Database Array tailored to Appendix A Hawker Operations (Main dishes, drinks)
 const menuItems = [
     { id: 1, name: "Signature Hainanese Chicken Rice", category: "Mains", price: 5.50, description: "Tender poached chicken served with fragrant seasoned rice, chili sauce, and minced ginger.", available: true },
     { id: 2, name: "Wok-Fried Hokkien Mee", category: "Mains", price: 6.00, description: "Stir-fried yellow noodles and thick bee hoon braised in rich prawn broth, topped with fresh prawns and squid.", available: true },
