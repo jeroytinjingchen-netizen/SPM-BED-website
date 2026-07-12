@@ -1,20 +1,21 @@
-// Mock Database Object Datastore Array
+// Mock Database Array tailored to Appendix A Hawker Operations (Main, Side, Drink)
 const menuItems = [
-    { id: 1, name: "Signature Chicken Rice", category: "Mains", price: 5.50, description: "Tender poached chicken served with fragrant seasoned rice, chili sauce, and minced ginger.", available: true },
-    { id: 2, name: "Char Kway Teow", category: "Mains", price: 6.00, description: "Stir-fried flat rice noodles with cockles, Chinese sausage, bean sprouts, and chives in sweet dark soy sauce.", available: true },
-    { id: 3, name: "Crispy Spring Rolls", category: "Sides", price: 3.50, description: "Deep-fried golden pastry skins stuffed with seasoned shredded vegetables and mushrooms. Serves 3 pieces.", available: true },
+    { id: 1, name: "Signature Hainanese Chicken Rice", category: "Mains", price: 5.50, description: "Tender poached chicken served with fragrant seasoned rice, chili sauce, and minced ginger.", available: true },
+    { id: 2, name: "Wok-Fried Hokkien Mee", category: "Mains", price: 6.00, description: "Stir-fried yellow noodles and thick bee hoon braised in rich prawn broth, topped with fresh prawns and squid.", available: true },
+    { id: 3, name: "Crispy Handmade Spring Rolls", category: "Sides", price: 3.50, description: "Deep-fried golden pastry skins stuffed with seasoned shredded turnips, carrots, and mushrooms. Serves 3 pieces.", available: true },
     { id: 4, name: "Iced Kopi Melaka", category: "Beverages", price: 2.80, description: "Traditional Nanyang dark roasted coffee sweetened with rich, aromatic palm sugar syrup and fresh milk.", available: true },
-    { id: 5, name: "Laksa Lemak", category: "Mains", price: 6.50, description: "Thick rice noodles served in a rich, spicy coconut milk curry broth topped with prawns, fish cakes, and hard-boiled egg.", available: true },
-    { id: 6, name: "Handmade Satay Sticks", category: "Sides", price: 4.80, description: "Grilled marinated chicken skewers charred over charcoal, accompanied by a robust spicy peanut dipping sauce.", available: false },
+    { id: 5, name: "Spicy Laksa Lemak", category: "Mains", price: 6.50, description: "Thick rice noodles served in a rich, spicy coconut milk curry broth topped with juicy cockles and fish cakes.", available: true },
+    { id: 6, name: "Charcoal Grilled Chicken Satay", category: "Sides", price: 4.80, description: "Grilled marinated chicken skewers charred over charcoal, accompanied by a robust spicy peanut dipping sauce.", available: false },
     { id: 7, name: "Teh Tarik (Frothy Milk Tea)", category: "Beverages", price: 2.20, description: "Black tea combined with condensed milk, poured back and forth repeatedly to create a smooth, frothy head.", available: true }
 ];
 
-// App State Management Variables
+// Application Routing State Management Variables
 let currentCategory = "All";
 let searchQuery = "";
 
-// Initialize App DOM Event Hooks
+// Initialize App DOM Layout Lifecycle Hooks
 document.addEventListener("DOMContentLoaded", () => {
+    // Initial draw phase
     renderMenu();
     
     // Wire Search Input Field Text Events
@@ -27,11 +28,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Category State Action Engine
+// Navigation View Engine (Handles opening standard standalone page views)
+function navigateTo(viewId) {
+    // Hide all existing view templates 
+    document.querySelectorAll('.page-view').forEach(view => {
+        view.classList.add('hidden');
+    });
+    
+    // Uncover targeted view id block
+    const targetView = document.getElementById(viewId);
+    if (targetView) {
+        targetView.classList.remove('hidden');
+    }
+    
+    // Ensure window scrolls back to top on transitions
+    window.scrollTo({ top: 0 });
+}
+
+// Category State Action Engine Filter Actions
 function filterCategory(category) {
     currentCategory = category;
     
-    // Dynamic Active Styling Toggle Routine
+    // Dynamic Active Button Selection Toggles
     const buttons = document.querySelectorAll(".category-btn");
     buttons.forEach(btn => {
         const text = btn.textContent.trim();
@@ -46,7 +64,7 @@ function filterCategory(category) {
     renderMenu();
 }
 
-// Core Array Filtering & Grid Injection Logic (Backlog: View & Search Items)
+// Core Array Filtering & Dynamic Card Injection
 function renderMenu() {
     const grid = document.getElementById("menu-grid");
     const emptyState = document.getElementById("empty-state");
@@ -60,7 +78,7 @@ function renderMenu() {
         return matchesCategory && matchesSearch;
     });
 
-    // Write counts context string
+    // Write metric text content
     document.getElementById("item-count").textContent = `Showing ${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
 
     // Clean Layout Grid Pipeline Context Elements
@@ -74,7 +92,7 @@ function renderMenu() {
     grid.classList.remove("hidden");
     emptyState.classList.add("hidden");
 
-    // Map Template Objects Dynamically onto View Container
+    // Map Template Elements Dynamically onto View Container
     filtered.forEach(item => {
         const card = document.createElement("div");
         card.className = "bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200";
@@ -92,7 +110,7 @@ function renderMenu() {
             </div>
             <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-100 flex justify-between items-center mt-auto">
                 <span class="text-lg font-bold text-gray-900">$${item.price.toFixed(2)}</span>
-                <button onclick="openModal(${item.id})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 focus:outline-hidden">
+                <button onclick="openItemDetailsPage(${item.id})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 focus:outline-hidden cursor-pointer">
                     View Details 
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
                 </button>
@@ -102,44 +120,26 @@ function renderMenu() {
     });
 }
 
-// Modal Toggle Overlay Lifecycle Actions (Backlog: View Item Details)
-function openModal(id) {
+// Routes to the dedicated full detailed item display page view
+function openItemDetailsPage(id) {
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
 
-    // Inject target dataset states directly onto UI fields
-    document.getElementById("modal-title").textContent = item.name;
-    document.getElementById("modal-badge").textContent = item.category;
-    document.getElementById("modal-description").textContent = item.description;
-    document.getElementById("modal-price").textContent = `$${item.price.toFixed(2)}`;
+    // Inject matching row record dataset metrics straight onto UI views
+    document.getElementById("detail-page-title").textContent = item.name;
+    document.getElementById("detail-page-badge").textContent = item.category;
+    document.getElementById("detail-page-description").textContent = item.description;
+    document.getElementById("detail-page-price").textContent = `$${item.price.toFixed(2)}`;
     
-    const statusEl = document.getElementById("modal-status");
+    const statusEl = document.getElementById("detail-page-status");
     if(item.available) {
-        statusEl.textContent = "Available";
-        statusEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
+        statusEl.textContent = "In Stock / Available";
+        statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
     } else {
-        statusEl.textContent = "Out of Stock";
-        statusEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800";
+        statusEl.textContent = "Out of Stock / Unavailable";
+        statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800";
     }
 
-    // Modal active class transitions
-    const modal = document.getElementById("details-modal");
-    modal.classList.remove("hidden");
-    setTimeout(() => {
-        modal.classList.add("opacity-100");
-        modal.querySelector('div').classList.remove("scale-95");
-        modal.querySelector('div').classList.add("scale-100");
-    }, 10);
-}
-
-function closeModal() {
-    const modal = document.getElementById("details-modal");
-    if (!modal) return;
-    
-    modal.classList.remove("opacity-100");
-    modal.querySelector('div').classList.remove("scale-100");
-    modal.querySelector('div').classList.add("scale-95");
-    setTimeout(() => {
-        modal.classList.add("hidden");
-    }, 200);
+    // Call transition routing switch
+    navigateTo('details-view');
 }
