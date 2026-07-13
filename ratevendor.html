@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Vendor</title>
+    <link rel="stylesheet" href="ratevendor.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>🍜 Rate Vendor</h1>
+        <p class="subtitle">
+            Share your dining experience with our hawker vendors.
+        </p>
+
+        <form id="feedbackForm">
+
+            <!-- Hawker Centre -->
+            <div class="form-group">
+                <label for="hawkerCentre">Hawker Centre</label>
+
+                <select id="hawkerCentre" required>
+                    <option value="">Select Hawker Centre</option>
+                    <option>Maxwell Food Centre</option>
+                    <option>Old Airport Road Food Centre</option>
+                    <option>Tiong Bahru Market</option>
+                </select>
+            </div>
+
+            <!-- Vendor Stall -->
+            <div class="form-group">
+                <label for="stall">Vendor Stall</label>
+
+                <select id="stall" required>
+                    <option value="">Select Vendor Stall</option>
+                    <option>Tian Tian Chicken Rice</option>
+                    <option>Ah Seng Laksa</option>
+                    <option>ABC Noodles</option>
+                </select>
+            </div>
+
+            <!-- Vendor Rating -->
+            <div class="form-group">
+
+                <label>Vendor Rating</label>
+
+                <div class="rating">
+
+                    <input type="radio" id="star5" name="rating" value="5">
+                    <label for="star5">★</label>
+
+                    <input type="radio" id="star4" name="rating" value="4">
+                    <label for="star4">★</label>
+
+                    <input type="radio" id="star3" name="rating" value="3">
+                    <label for="star3">★</label>
+
+                    <input type="radio" id="star2" name="rating" value="2">
+                    <label for="star2">★</label>
+
+                    <input type="radio" id="star1" name="rating" value="1">
+                    <label for="star1">★</label>
+
+                </div>
+
+            </div>
+
+            <!-- Like Vendor -->
+            <div class="form-group">
+
+                <label>
+                    <input type="checkbox" id="likeVendor">
+                    ❤️ I like this vendor
+                </label>
+
+            </div>
+
+            <!-- Feedback -->
+            <div class="form-group">
+
+                <label for="comment">Feedback</label>
+
+                <textarea id="comment" rows="5" placeholder="Tell us about your experience..." required></textarea>
+
+            </div>
+
+            <button type="submit">
+                Submit Feedback
+            </button>
+
+        </form>
+
+    </div>
+
+    <script src="feedback.js"></script>
+
+</body>
+
+</html>
