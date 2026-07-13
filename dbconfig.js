@@ -1,6 +1,6 @@
 // dbConfig.js
 module.exports = {
-  user: "Hawker_db_user",
+  user: "FoodDB1",
   password: "123",
   server: "localhost", 
   database: "Hawker_db",
