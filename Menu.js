@@ -12,11 +12,40 @@ const menuItems = [
 // Application Routing State Management Variables
 let currentCategory = "All";
 let searchQuery = "";
+let cartItems = [];
+let cartCount = 0;
+
+function loadCart() {
+    const savedCart = localStorage.getItem("hawkerhub-cart");
+    if (savedCart) {
+        cartItems = JSON.parse(savedCart);
+    }
+    cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function saveCart() {
+    localStorage.setItem("hawkerhub-cart", JSON.stringify(cartItems));
+    cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    updateCartButton();
+    renderCartPage();
+}
 
 // Initialize App DOM Layout Lifecycle Hooks
 document.addEventListener("DOMContentLoaded", () => {
+    loadCart();
+
     // Initial draw phase
     renderMenu();
+    updateCartButton();
+    renderCartPage();
+
+    const clearCartButton = document.getElementById("clear-cart");
+    if (clearCartButton) {
+        clearCartButton.addEventListener("click", () => {
+            cartItems = [];
+            saveCart();
+        });
+    }
     
     // Wire Search Input Field Text Events
     const searchInput = document.getElementById("search-input");
@@ -108,17 +137,121 @@ function renderMenu() {
                 <h3 class="font-bold text-gray-900 text-lg leading-snug line-clamp-1">${item.name}</h3>
                 <p class="text-gray-500 text-xs mt-1.5 line-clamp-2 leading-relaxed">${item.description}</p>
             </div>
-            <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-100 flex justify-between items-center mt-auto">
+            <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-100 flex justify-between items-center mt-auto gap-2 flex-wrap">
                 <span class="text-lg font-bold text-gray-900">$${item.price.toFixed(2)}</span>
-                <button onclick="openItemDetailsPage(${item.id})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 focus:outline-hidden cursor-pointer">
-                    View Details 
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="openItemDetailsPage(${item.id})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 focus:outline-hidden cursor-pointer">
+                        View Details 
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    <button onclick="addToCart(${item.id})" class="px-3 py-2 text-xs font-semibold rounded-full bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 transition-colors focus:outline-hidden">
+                        Add to Cart
+                    </button>
+                </div>
             </div>
         `;
         grid.appendChild(card);
     });
 }
+
+function updateCartButton() {
+    const cartCountEl = document.getElementById("cart-count");
+    if (cartCountEl) {
+        cartCountEl.textContent = cartCount;
+    }
+}
+
+function addToCart(id) {
+    const item = menuItems.find(i => i.id === id);
+    if (!item) return;
+
+    const existingItem = cartItems.find(cartItem => cartItem.id === id);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cartItems.push({ ...item, quantity: 1 });
+    }
+
+    saveCart();
+    alert(`${item.name} has been added to the cart.`);
+}
+
+function changeCartQuantity(id, delta) {
+    const item = cartItems.find(cartItem => cartItem.id === id);
+    if (!item) return;
+
+    const nextQuantity = item.quantity + delta;
+    if (nextQuantity < 1) return;
+
+    item.quantity = nextQuantity;
+    saveCart();
+}
+
+function removeCartItem(id) {
+    cartItems = cartItems.filter(cartItem => cartItem.id !== id);
+    saveCart();
+}
+
+function renderCartPage() {
+    if (!document.getElementById("cart-items")) return;
+
+    const cartItemsContainer = document.getElementById("cart-items");
+    const emptyCart = document.getElementById("empty-cart");
+    const summaryCount = document.getElementById("summary-count");
+    const summarySubtotal = document.getElementById("summary-subtotal");
+    const cartSummary = document.getElementById("cart-summary");
+    const checkoutButton = document.getElementById("checkout-button");
+
+    if (!cartItemsContainer || !emptyCart || !summaryCount || !summarySubtotal || !cartSummary) return;
+
+    if (cartItems.length === 0) {
+        cartItemsContainer.innerHTML = "";
+        emptyCart.classList.remove("hidden");
+        summaryCount.textContent = "0";
+        summarySubtotal.textContent = "$0.00";
+        cartSummary.textContent = "0 items selected";
+        if (checkoutButton) {
+            checkoutButton.classList.add("hidden");
+            checkoutButton.classList.remove("inline-flex");
+        }
+        return;
+    }
+
+    emptyCart.classList.add("hidden");
+    cartItemsContainer.innerHTML = cartItems.map(item => `
+        <div class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h3 class="font-semibold text-gray-900">${item.name}</h3>
+                <p class="text-sm text-gray-500">${item.category}</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center rounded-full border border-gray-300 bg-white">
+                    <button onclick="changeCartQuantity(${item.id}, -1)" class="px-2.5 py-1.5 text-xl font-semibold text-gray-700 hover:text-indigo-600" aria-label="Decrease quantity">-</button>
+                    <span class="min-w-9 text-center text-base font-semibold text-gray-900">${item.quantity}</span>
+                    <button onclick="changeCartQuantity(${item.id}, 1)" class="px-2.5 py-1.5 text-xl font-semibold text-gray-700 hover:text-indigo-600" aria-label="Increase quantity">+</button>
+                </div>
+                <span class="text-sm font-semibold text-indigo-600">$${(item.price * item.quantity).toFixed(2)}</span>
+                <button onclick="removeCartItem(${item.id})" class="rounded-full bg-red-500 px-3 py-1.5 text-base font-semibold text-white hover:bg-red-600" aria-label="Remove item">×</button>
+            </div>
+        </div>
+    `).join("");
+
+    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    summaryCount.textContent = totalItems;
+    summarySubtotal.textContent = `$${subtotal.toFixed(2)}`;
+    cartSummary.textContent = `${totalItems} item${totalItems === 1 ? "" : "s"} selected`;
+    if (checkoutButton) {
+        checkoutButton.classList.remove("hidden");
+        checkoutButton.classList.add("inline-flex");
+    }
+}
+
+window.addEventListener("storage", () => {
+    loadCart();
+    updateCartButton();
+    renderCartPage();
+});
 
 // Routes to the dedicated full detailed item display page view
 function openItemDetailsPage(id) {

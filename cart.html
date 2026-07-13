@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HawkerHub - Cart</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="Menu.css">
+</head>
+<body class="bg-gray-50 font-sans text-gray-900 min-h-screen">
+    <nav class="bg-white shadow-xs border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold text-indigo-600 tracking-wide cursor-pointer" onclick="navigateTo('menu-view')">HawkerHub</span>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">Zhen Yu's Module</span>
+                </div>
+                <a href="Menu.html" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">Back to Menu</a>
+            </div>
+        </div>
+    </nav>
+
+    <a id="cart-button" href="cart.html" class="fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-2 text-white shadow-md transition-colors hover:bg-blue-700 focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
+            <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+            <circle cx="18" cy="20" r="1.5" fill="currentColor" />
+        </svg>
+        <span class="text-sm font-semibold">Cart</span>
+        <span id="cart-count" class="min-w-5 rounded-full bg-white px-1.5 py-0.5 text-xs font-bold text-blue-600">0</span>
+    </a>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-6">
+            <section class="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Your Cart</h1>
+                        <p id="cart-summary" class="text-sm text-gray-500 mt-1">0 items selected</p>
+                    </div>
+                    <button id="clear-cart" type="button" class="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">Clear cart</button>
+                </div>
+
+                <div id="cart-items" class="mt-6 space-y-3"></div>
+
+                <div id="empty-cart" class="hidden py-16 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
+                        <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+                        <circle cx="18" cy="20" r="1.5" fill="currentColor" />
+                    </svg>
+                    <h2 class="mt-4 text-lg font-semibold text-gray-900">Your cart is empty</h2>
+                    <p class="mt-1 text-sm text-gray-500">Add dishes from the menu to see them here.</p>
+                    <a href="Menu.html" class="mt-5 inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">Browse menu</a>
+                </div>
+            </section>
+
+            <aside class="w-full lg:w-80 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 h-fit">
+                <h2 class="text-lg font-semibold text-gray-900">Order Summary</h2>
+                <div class="mt-4 space-y-3 text-sm text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Items</span>
+                        <span id="summary-count">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span id="summary-subtotal">$0.00</span>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-3">
+                    <a href="Menu.html" class="inline-flex w-full justify-center rounded-full border border-blue-600 bg-white px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition-colors">Continue shopping</a>
+                    <a id="checkout-button" href="order-placed.html" class="hidden w-full justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">Checkout</a>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script src="Menu.js"></script>
+</body>
+</html>

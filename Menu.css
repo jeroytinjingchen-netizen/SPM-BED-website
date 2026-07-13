@@ -32,3 +32,10 @@ body {
     background-color: #e2e8f0;
     border-radius: 9999px;
 }
+
+#cart-button {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 60;
+}
