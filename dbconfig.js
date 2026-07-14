@@ -1,9 +1,9 @@
 // dbConfig.js
 module.exports = {
   user: "FoodDB1",
-  password: "123",
+  password: "password",
   server: "localhost", 
-  database: "Hawker_db",
+  database: "Group3Database",
   options: {
     encrypt: true, // Use encryption
     trustServerCertificate: true, // Required for local development
