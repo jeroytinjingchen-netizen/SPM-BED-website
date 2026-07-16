@@ -16,6 +16,10 @@ const port = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serves your front-end (Index.html, script.js, style.css) from /public
+// e.g. visiting http://localhost:3000 loads Index.html automatically
+app.use(express.static("public"));
+
 // ==========================================
 // TEST ROUTE TO PROVE DATABASE CONNECTION
 // ==========================================
