@@ -2,9 +2,11 @@
 // Handles the request/response cycle only. All SQL lives in the model.
 
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const customerModel = require("../models/customerModel");
 
 const SALT_ROUNDS = 10;
+const JWT_SECRET = process.env.JWT_SECRET || "dev_only_fallback_secret";
 
 // POST /api/customers/register
 async function registerCustomer(req, res) {
@@ -49,8 +51,16 @@ async function loginCustomer(req, res) {
             return res.status(401).json({ message: "Invalid email or password." });
         }
 
+        // Payload kept minimal on purpose - never put the password/hash in a token
+        const token = jwt.sign(
+            { customerId: customer.CustomerID, email: customer.CustEmail },
+            JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
         res.status(200).json({
             message: "Login successful.",
+            token,
             customer: {
                 customerId: customer.CustomerID,
                 name: customer.CustName,
