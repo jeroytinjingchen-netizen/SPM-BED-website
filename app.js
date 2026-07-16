@@ -1,8 +1,9 @@
-// app.js
+
 require("dotenv").config();
 const express = require("express");
-const sql = require("mssql");
+const sql = require("mssql"); 
 const dbConfig = require("./dbConfig");
+const menuItemController = require("./controllers/menuItemController");
 
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
@@ -35,6 +36,11 @@ app.get("/api/test-db", async (req, res) => {
         res.status(500).json({ status: "FAILED", error: error.message });
     }
 });
+// ==========================================
+// surraj - vendor menu nodes
+// ==========================================
+app.get("/stalls/:stallId/menu", menuItemController.getMenu);
+app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 
 // ==========================================
 // CUSTOMER ROUTES
