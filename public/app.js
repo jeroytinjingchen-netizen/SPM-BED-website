@@ -9,6 +9,9 @@ const likeRoutes = require("./routes/likeRoutes");
 // Import Feedback Controller
 const feedbackController = require("./controllers/feedbackController");
 
+// Import Cart Controller
+const cartController = require('./controllers/cartcontroller');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -39,6 +42,15 @@ app.post("/api/feedback", feedbackController.createFeedback);
 app.get("/", (req, res) => {
   res.send("HawkerHub backend is running.");
 });
+
+// ==========================================
+// CART ROUTES
+// ==========================================
+app.get('/api/cart', cartController.getCart);
+app.post('/api/cart/add', cartController.validateCart, cartController.addToCart);
+app.post('/api/cart/update', cartController.updateCartItem);
+app.post('/api/cart/remove', cartController.removeCartItem);
+app.post('/api/cart/clear', cartController.clearCart);
 
 // ==========================================
 // TEST DATABASE CONNECTION
