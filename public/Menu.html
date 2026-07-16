@@ -1,57 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HawkerHub - Menu Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="stylesheet" href="menu.css">
 </head>
+
 <body class="bg-gray-50 font-sans text-gray-900 min-h-screen">
 
     <nav class="bg-white shadow-xs border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl font-bold text-indigo-600 tracking-wide cursor-pointer" onclick="navigateTo('menu-view')">HawkerHub</span>
-                    <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">Zhen Yu's Module</span>
+                    <span class="text-xl font-bold text-indigo-600 tracking-wide cursor-pointer"
+                        onclick="navigateTo('menu-view')">HawkerHub</span>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">Zhen Yu's
+                        Module</span>
                 </div>
             </div>
         </div>
     </nav>
 
-    <a id="cart-button" href="cart.html" class="fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-2 text-white shadow-md transition-colors hover:bg-blue-700 focus:outline-none">
+    <a id="like-button" href="likeMenu.html"
+        class="fixed top-3 right-32 z-50 flex items-center gap-2 rounded-full bg-pink-500 px-4 py-2 text-white shadow-md hover:bg-pink-600 transition-colors">
+        ❤️
+        <span class="text-sm font-semibold">Favourite</span>
+        <span id="like-count" class="min-w-5 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-pink-500">0</span>
+    </a>
+
+    <a id="cart-button" href="cart.html"
+        class="fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-2 text-white shadow-md transition-colors hover:bg-blue-700 focus:outline-none">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
             <circle cx="9" cy="20" r="1.5" fill="currentColor" />
             <circle cx="18" cy="20" r="1.5" fill="currentColor" />
         </svg>
         <span class="text-sm font-semibold">Cart</span>
-        <span id="cart-count" class="min-w-5 rounded-full bg-white px-1.5 py-0.5 text-xs font-bold text-blue-600">0</span>
+        <span id="cart-count"
+            class="min-w-5 rounded-full bg-white px-1.5 py-0.5 text-xs font-bold text-blue-600">0</span>
     </a>
 
-    <div id="menu-view" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <section class="bg-white p-6 rounded-xl shadow-xs border border-gray-200 mb-8">
+    <div id="menu-view" class="page-view max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <section class="bg-white p-6 rounded-xl shadow-xs border border-gray-200">
             <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div class="w-full md:w-1/2 relative">
                     <label for="search-input" class="sr-only">Search menu items</label>
-                    <input 
-                        type="text" 
-                        id="search-input" 
-                        placeholder="Search items by name or description..." 
-                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
-                    >
+                    <input type="text" id="search-input" placeholder="Search items by name or description..."
+                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
                     <div class="absolute left-3 top-3.5 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
                 </div>
                 <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0" id="category-filters">
-                    <button onclick="filterCategory('All')" class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white shadow-xs transition-colors">All Items</button>
-                    <button onclick="filterCategory('Mains')" class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Mains</button>
-                    <button onclick="filterCategory('Sides')" class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Sides</button>
-                    <button onclick="filterCategory('Beverages')" class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Beverages</button>
+                    <button onclick="filterCategory('All')"
+                        class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white shadow-xs transition-colors">All
+                        Items</button>
+                    <button onclick="filterCategory('Mains')"
+                        class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Mains</button>
+                    <button onclick="filterCategory('Sides')"
+                        class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Sides</button>
+                    <button onclick="filterCategory('Beverages')"
+                        class="category-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Beverages</button>
                 </div>
             </div>
         </section>
@@ -61,12 +79,15 @@
                 <h2 class="text-2xl font-bold tracking-tight text-gray-900">Menu Catalog</h2>
                 <span id="item-count" class="text-sm text-gray-500 font-medium">Showing 0 items</span>
             </div>
-            
+
             <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
 
-            <div id="empty-state" class="hidden text-center py-16 bg-white rounded-xl border border-dashed border-gray-300 mt-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div id="empty-state"
+                class="hidden text-center py-16 bg-white rounded-xl border border-dashed border-gray-300 mt-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 class="mt-4 text-sm font-semibold text-gray-900">No menu items found</h3>
                 <p class="mt-1 text-sm text-gray-500">Try adjusting your search query or selected category.</p>
@@ -75,41 +96,41 @@
     </div>
 
     <div id="details-view" class="page-view hidden max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <button onclick="navigateTo('menu-view')" class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors group">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        <button onclick="navigateTo('menu-view')"
+            class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors group">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
             Back to Menu Catalog
         </button>
 
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="h-48 bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white p-6 relative">
+            <div
+                class="h-48 bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white p-6 relative">
                 <div class="text-center">
-                    <span id="detail-page-badge" class="px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-full bg-white/20 text-white mb-2 inline-block">Category</span>
+                    <span id="detail-page-badge"
+                        class="px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-full bg-white/20 text-white mb-2 inline-block">Category</span>
                     <h1 id="detail-page-title" class="text-3xl font-extrabold tracking-tight">Item Name</h1>
                 </div>
             </div>
-
             <div class="p-8 space-y-6">
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Item Description</h3>
-                    <p id="detail-page-description" class="text-gray-600 text-base leading-relaxed">Detailed specification metrics go here.</p>
+                    <p id="detail-page-description" class="text-gray-600 text-base leading-relaxed">Detailed
+                        specification metrics go here.</p>
                 </div>
-
                 <div class="grid grid-cols-2 gap-6 border-t border-b border-gray-100 py-6">
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Price Tier</h3>
                         <span id="detail-page-price" class="text-3xl font-black text-indigo-600">$0.00</span>
                     </div>
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Stall Inventory Status</h3>
-                        <span id="detail-page-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1">Available</span>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Stall Management Metadata</h3>
-                    <div class="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-2 border border-gray-200">
-                        <p>• Verified compliance alignment with National Environment Agency (NEA) sanitation standard protocols[cite: 79, 94].</p>
-                        <p>• Menu item changes are tracked directly via the operator's active vendor lease rental framework agreements[cite: 80, 83, 129].</p>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Stall Inventory Status
+                        </h3>
+                        <span id="detail-page-status"
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1">Available</span>
                     </div>
                 </div>
             </div>
@@ -118,4 +139,5 @@
 
     <script src="Menu.js"></script>
 </body>
+
 </html>

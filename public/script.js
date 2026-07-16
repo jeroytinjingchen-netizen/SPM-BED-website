@@ -152,19 +152,3 @@ function showAlert(element, type, message) {
     element.style.display = "block";
 }
 
-// Dynamic Nav Items Display Synchronization Renderer Layout Engine
-function updateNavigationUI(isLoggedIn) {
-    const menu = document.getElementById('nav-menu');
-    if (isLoggedIn) {
-        menu.innerHTML = `
-            <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
-            <li><a onclick="handleLogout()" class="btn-primary">Log Out</a></li>
-        `;
-    } else {
-        menu.innerHTML = `
-            <li><a onclick="navigateTo('landing-view')">Home</a></li>
-            <li><a onclick="navigateTo('login-view')">Log In</a></li>
-            <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
-        `;
-    }
-}

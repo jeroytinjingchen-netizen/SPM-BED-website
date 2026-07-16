@@ -93,11 +93,56 @@ function filterCategory(category) {
     renderMenu();
 }
 
+function toggleFavourite(id, button, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (favourites.includes(id)) {
+        favourites = favourites.filter(item => item !== id);
+
+        button.innerHTML = "♡";
+        button.classList.remove("bg-pink-500", "text-white");
+        button.classList.add("bg-white", "text-pink-500");
+    } else {
+        favourites.push(id);
+
+        button.innerHTML = "♥";
+        button.classList.remove("bg-white", "text-pink-500");
+        button.classList.add("bg-pink-500", "text-white");
+    }
+
+    localStorage.setItem("favourites", JSON.stringify(favourites));
+
+    const likeCount = document.getElementById("like-count");
+    if (likeCount) {
+        likeCount.textContent = favourites.length;
+    }
+
+    // Remove the black focus outline after clicking
+    button.blur();
+}
+
 // Core Array Filtering & Dynamic Card Injection
 function renderMenu() {
     const grid = document.getElementById("menu-grid");
     const emptyState = document.getElementById("empty-state");
     if (!grid || !emptyState) return;
+
+function openFavouriteReview(id, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const selectedItem = menuItems.find(item => item.id === id);
+
+    if (!selectedItem) return;
+
+    localStorage.setItem(
+        "selectedFavouriteItem",
+        JSON.stringify(selectedItem)
+    );
+
+    window.location.href = "likeMenu.html";
+}
     
     // Evaluation Pipeline Filter
     const filtered = menuItems.filter(item => {
@@ -127,12 +172,28 @@ function renderMenu() {
         card.className = "bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200";
         
         card.innerHTML = `
-            <div class="p-5 flex-1">
-                <div class="flex justify-between items-start gap-2 mb-2">
-                    <span class="inline-block text-[11px] font-bold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">${item.category}</span>
-                    <span class="text-xs ${item.available ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} px-2 py-0.5 rounded-md font-medium">
-                        ${item.available ? 'In Stock' : 'Out of Stock'}
-                    </span>
+            <div class="flex justify-between items-start gap-2 mb-2">
+
+    <span class="inline-block text-[11px] font-bold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+        ${item.category}
+    </span>
+
+    <div class="flex items-center gap-2">
+
+        <span class="text-xs ${item.available ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} px-2 py-0.5 rounded-md font-medium">
+            ${item.available ? 'In Stock' : 'Out of Stock'}
+        </span>
+<button
+    type="button"
+    onclick="openFavouriteReview(${item.id}, event)"
+    title="Add to favourite and write review"
+    class="flex h-9 w-9 items-center justify-center rounded-full border border-pink-300 bg-white text-xl text-pink-500 shadow-sm cursor-pointer transition-all duration-200 hover:scale-110 hover:bg-pink-500 hover:text-white hover:shadow-md">
+    ♡
+</button>
+
+    </div>
+
+</div>
                 </div>
                 <h3 class="font-bold text-gray-900 text-lg leading-snug line-clamp-1">${item.name}</h3>
                 <p class="text-gray-500 text-xs mt-1.5 line-clamp-2 leading-relaxed">${item.description}</p>
@@ -175,6 +236,8 @@ function addToCart(id) {
     saveCart();
     alert(`${item.name} has been added to the cart.`);
 }
+
+
 
 function changeCartQuantity(id, delta) {
     const item = cartItems.find(cartItem => cartItem.id === id);
@@ -252,6 +315,36 @@ window.addEventListener("storage", () => {
     updateCartButton();
     renderCartPage();
 });
+
+
+function toggleFavourite(id, button, event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (favourites.includes(id)) {
+        favourites = favourites.filter(item => item !== id);
+
+        button.innerHTML = "♡";
+        button.classList.remove("bg-pink-500", "text-white");
+        button.classList.add("bg-white", "text-pink-500");
+    } else {
+        favourites.push(id);
+
+        button.innerHTML = "♥";
+        button.classList.remove("bg-white", "text-pink-500");
+        button.classList.add("bg-pink-500", "text-white");
+    }
+
+    localStorage.setItem("favourites", JSON.stringify(favourites));
+
+    const likeCount = document.getElementById("like-count");
+    if (likeCount) {
+        likeCount.textContent = favourites.length;
+    }
+
+    // Remove the black focus outline after clicking
+    button.blur();
+}
 
 // Routes to the dedicated full detailed item display page view
 function openItemDetailsPage(id) {
