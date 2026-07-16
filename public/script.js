@@ -1,134 +1,170 @@
-        // Simulated local storage user data schema instantiation
-        if (!localStorage.getItem('hawker_users')) {
-            localStorage.setItem('hawker_users', JSON.stringify([]));
+// Global Application State Trackers
+let currentUser = null;
+let authToken = null;
+const API_BASE = '/api/customers'; // same-origin, since Express serves this file too
+
+// View Router Controller Engine
+function navigateTo(viewId) {
+    const restrictedPages = ['dashboard-view'];
+    if (restrictedPages.includes(viewId) && !currentUser) {
+        const loginAlert = document.getElementById('login-alert');
+        loginAlert.className = "alert alert-danger";
+        loginAlert.innerText = "Access Denied. Please log into an active profile first.";
+        loginAlert.style.display = "block";
+        navigateTo('login-view');
+        return;
+    }
+
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+
+    document.getElementById(viewId).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+// Account Registration Handler Engine (POST /api/customers/register)
+async function handleRegistration(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('register-alert');
+    alertBox.style.display = "none";
+
+    const custName = document.getElementById('reg-name').value.trim();
+    const custEmail = document.getElementById('reg-email').value.trim().toLowerCase();
+    const custNric = document.getElementById('reg-nric').value.trim().toUpperCase();
+    const custContactNo = document.getElementById('reg-contact').value.trim();
+    const custPassword = document.getElementById('reg-password').value;
+    const confirmPassword = document.getElementById('reg-confirm').value;
+
+    if (custPassword.length < 8) {
+        showAlert(alertBox, "danger", "Password must be at least 8 characters long.");
+        return;
+    }
+    if (custPassword !== confirmPassword) {
+        showAlert(alertBox, "danger", "Passwords do not match.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ custName, custNric, custContactNo, custEmail, custPassword })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showAlert(alertBox, "danger", data.message || "Registration failed.");
+            return;
         }
 
-        // Global Application State Trackers
-        let currentUser = null;
+        document.getElementById('register-form').reset();
 
-        // View Router Controller Engine
-        function navigateTo(viewId) {
-            // Guard Rule Simulation (Route Protection Criteria validation)
-            const restrictedPages = ['dashboard-view'];
-            if (restrictedPages.includes(viewId) && !currentUser) {
-                const loginAlert = document.getElementById('login-alert');
-                loginAlert.className = "alert alert-danger";
-                loginAlert.innerText = "Access Denied. Please log into an active profile first.";
-                loginAlert.style.display = "block";
-                navigateTo('login-view');
-                return;
-            }
+        const loginAlert = document.getElementById('login-alert');
+        showAlert(loginAlert, "success", `Registration successful! Your Customer ID is ${data.customerId}. You may now sign in.`);
+        navigateTo('login-view');
+    } catch (err) {
+        console.error(err);
+        showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
+    }
+}
 
-            // Clear all structural views
-            document.querySelectorAll('.view').forEach(view => {
-                view.classList.remove('active');
-            });
+// User Login Authentication Engine (POST /api/customers/login)
+async function handleLogin(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('login-alert');
+    alertBox.style.display = "none";
 
-            // Toggle selected layout block
-            document.getElementById(viewId).classList.add('active');
-            window.scrollTo(0, 0);
+    const custEmail = document.getElementById('login-email').value.trim().toLowerCase();
+    const custPassword = document.getElementById('login-password').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ custEmail, custPassword })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showAlert(alertBox, "danger", data.message || "Invalid email or password.");
+            return;
         }
 
-        // Account Registration Handler Engine
-        function handleRegistration(e) {
-            e.preventDefault();
-            const alertBox = document.getElementById('register-alert');
-            alertBox.style.display = "none";
+        currentUser = data.customer;
+        authToken = data.token; // save the JWT for use on protected requests
 
-            const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value.trim().toLowerCase();
-            const role = document.getElementById('reg-role').value;
-            const password = document.getElementById('reg-password').value;
-            const confirmPassword = document.getElementById('reg-confirm').value;
+        document.getElementById('user-display-name').innerText = currentUser.name;
+        document.getElementById('user-display-role').innerText = "Customer";
 
-            // Password length rule evaluation
-            if (password.length < 8) {
-                showAlert(alertBox, "danger", "Password validation failed: Must be at least 8 characters long.");
-                return;
-            }
+        document.getElementById('login-form').reset();
+        updateNavigationUI(true);
+        navigateTo('dashboard-view');
 
-            // Password validation equality verification check
-            if (password !== confirmPassword) {
-                showAlert(alertBox, "danger", "Validation error: Input fields do not match.");
-                return;
-            }
+        // Prove the whole chain works: front-end -> API -> database, using the token
+        fetchLiveCustomerData(currentUser.customerId);
+    } catch (err) {
+        console.error(err);
+        showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
+    }
+}
 
-            let users = JSON.parse(localStorage.getItem('hawker_users'));
+// GET /api/customers/:id, using the stored JWT - this is what shows up
+// as a matching request in Postman/your server terminal logs.
+async function fetchLiveCustomerData(customerId) {
+    const output = document.getElementById('live-customer-data');
+    output.innerText = "Loading...";
 
-            // Check Duplicate Accounts Criteria constraint
-            if (users.find(u => u.email === email)) {
-                showAlert(alertBox, "danger", "Registration Blocked: Email string is already linked to another user account.");
-                return;
-            }
+    try {
+        const response = await fetch(`${API_BASE}/${customerId}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
 
-            // Add clean record payload (Simulating secure hashing save state entry context)
-            users.push({ name, email, role, password: btoa(password) }); // btoa simulates simple basic password obfuscation encoding
-            localStorage.setItem('hawker_users', JSON.stringify(users));
+        const data = await response.json();
 
-            // Reset Registration form input elements
-            document.getElementById('register-form').reset();
-
-            // Set login feedback notification text configuration context parameters
-            const loginAlert = document.getElementById('login-alert');
-            showAlert(loginAlert, "success", "Registration successful! You may now sign in using your credentials.");
-            navigateTo('login-view');
+        if (!response.ok) {
+            output.innerText = `Error: ${data.message}`;
+            return;
         }
 
-        // User Login Authentication Engine
-        function handleLogin(e) {
-            e.preventDefault();
-            const alertBox = document.getElementById('login-alert');
-            alertBox.style.display = "none";
+        output.innerText = JSON.stringify(data, null, 2);
+    } catch (err) {
+        console.error(err);
+        output.innerText = "Could not reach the server.";
+    }
+}
 
-            const email = document.getElementById('login-email').value.trim().toLowerCase();
-            const password = btoa(document.getElementById('login-password').value);
+// Logout Session Termination Engine
+function handleLogout() {
+    currentUser = null;
+    authToken = null;
+    updateNavigationUI(false);
+    navigateTo('landing-view');
+}
 
-            const users = JSON.parse(localStorage.getItem('hawker_users'));
-            const matchedUser = users.find(u => u.email === email && u.password === password);
+// Context Utility Alert Box Presenter Script
+function showAlert(element, type, message) {
+    element.className = `alert alert-${type}`;
+    element.innerText = message;
+    element.style.display = "block";
+}
 
-            if (!matchedUser) {
-                // Return vague error messages strings parsing context parameters (Security compliance constraint mapping)
-                showAlert(alertBox, "danger", "Invalid email or password.");
-                return;
-            }
-
-            // Success authentication entry state management allocation tracking mapping
-            currentUser = matchedUser;
-            document.getElementById('user-display-name').innerText = currentUser.name;
-            document.getElementById('user-display-role').innerText = currentUser.role;
-            
-            document.getElementById('login-form').reset();
-            updateNavigationUI(true);
-            navigateTo('dashboard-view');
-        }
-
-        // Logout Session Termination Engine
-        function handleLogout() {
-            currentUser = null;
-            updateNavigationUI(false);
-            navigateTo('landing-view');
-        }
-
-        // Context Utility Alert Box Presenter Script
-        function showAlert(element, type, message) {
-            element.className = `alert alert-${type}`;
-            element.innerText = message;
-            element.style.display = "block";
-        }
-
-        // Dynamic Nav Items Display Synchronization Renderer Layout Engine
-        function updateNavigationUI(isLoggedIn) {
-            const menu = document.getElementById('nav-menu');
-            if (isLoggedIn) {
-                menu.innerHTML = `
-                    <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
-                    <li><a onclick="handleLogout()" class="btn-primary">Log Out</a></li>
-                `;
-            } else {
-                menu.innerHTML = `
-                    <li><a onclick="navigateTo('landing-view')">Home</a></li>
-                    <li><a onclick="navigateTo('login-view')">Log In</a></li>
-                    <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
-                `;
-            }
-        }
+// Dynamic Nav Items Display Synchronization Renderer Layout Engine
+function updateNavigationUI(isLoggedIn) {
+    const menu = document.getElementById('nav-menu');
+    if (isLoggedIn) {
+        menu.innerHTML = `
+            <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
+            <li><a onclick="handleLogout()" class="btn-primary">Log Out</a></li>
+        `;
+    } else {
+        menu.innerHTML = `
+            <li><a onclick="navigateTo('landing-view')">Home</a></li>
+            <li><a onclick="navigateTo('login-view')">Log In</a></li>
+            <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
+        `;
+    }
+}
