@@ -83,4 +83,4 @@ process.on("SIGINT", async () => {
 app.get("/api/menu/search", menuController.searchMenu);
 app.get("/api/menu/stall/:stall_id", menuController.getMenuByStall);
 app.get("/api/menu/item/:item_id", menuController.getItemDetails);
-app.post("/api/menu/item", menuController.createMenuItem); // Checkpoint POST requirement[cite: 1]
+app.put("/api/menu/item/:item_id", menuController.updateMenuItem);
