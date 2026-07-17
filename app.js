@@ -5,6 +5,7 @@ const sql = require("mssql");
 const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
 const menuController = require("./controllers/menuController");
+const cartController = require('./controllers/cartcontroller');
 
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
@@ -20,6 +21,17 @@ app.use(express.urlencoded({ extended: true }));
 // Serves your front-end (Index.html, script.js, style.css) from /public
 // e.g. visiting http://localhost:3000 loads Index.html automatically
 app.use(express.static("public"));
+
+// ==========================================
+// CART CONTROLLER
+// ==========================================
+const cartController = require("./controllers/cartController");
+// CART ROUTES
+app.get('/api/cart', cartController.getCart);
+app.post('/api/cart/add', cartController.validateCart, cartController.addToCart);
+app.post('/api/cart/update', cartController.updateCartItem);
+app.post('/api/cart/remove', cartController.removeCartItem);
+app.post('/api/cart/clear', cartController.clearCart);
 
 // ==========================================
 // TEST ROUTE TO PROVE DATABASE CONNECTION
