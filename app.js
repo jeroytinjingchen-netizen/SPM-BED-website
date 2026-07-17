@@ -4,6 +4,7 @@ const express = require("express");
 const sql = require("mssql"); 
 const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
+const menuController = require("./controllers/menuController");
 
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
@@ -77,3 +78,9 @@ process.on("SIGINT", async () => {
   console.log("Database connection closed.");
   process.exit(0);
 });
+
+// Menu Feature Endpoints
+app.get("/api/menu/search", menuController.searchMenu);
+app.get("/api/menu/stall/:stall_id", menuController.getMenuByStall);
+app.get("/api/menu/item/:item_id", menuController.getItemDetails);
+app.post("/api/menu/item", menuController.createMenuItem); // Checkpoint POST requirement[cite: 1]
