@@ -32,7 +32,7 @@ function validateCart(req, res, next) {
 // Get cart for a customer (query param: customerId)
 async function getCart(req, res) {
   try {
-    const customerId = req.query.customerId;
+    const customerId = req.query.customerId || req.query.customerid;
     if (!customerId) return res.status(400).json({ error: 'customerId is required' });
 
     let cart = await Cart.getOpenCartByCustomer(customerId);
@@ -44,6 +44,9 @@ async function getCart(req, res) {
     res.json({ cart, items });
   } catch (error) {
     console.error('Controller getCart error:', error);
+    if (error && error.message && error.message.includes('FOREIGN KEY')) {
+      return res.status(400).json({ error: 'Customer ID does not exist in the database. Use an existing CustomerID such as CUS000001.' });
+    }
     res.status(500).json({ error: 'Error fetching cart' });
   }
 }
@@ -52,7 +55,7 @@ async function getCart(req, res) {
 async function addToCart(req, res) {
   try {
     const body = req.body;
-    const customerId = body.customerId || body.CustomerID;
+    const customerId = body.customerId || body.CustomerID || body.customerid;
     if (!customerId) return res.status(400).json({ error: 'customerId is required' });
 
     let cart = await Cart.getOpenCartByCustomer(customerId);
@@ -70,6 +73,9 @@ async function addToCart(req, res) {
     res.status(200).json({ cartId, added: results, items: updatedItems });
   } catch (error) {
     console.error('Controller addToCart error:', error);
+    if (error && error.message && error.message.includes('FOREIGN KEY')) {
+      return res.status(400).json({ error: 'Customer ID does not exist in the database. Use an existing CustomerID such as CUS000001.' });
+    }
     res.status(500).json({ error: 'Error adding to cart' });
   }
 }
