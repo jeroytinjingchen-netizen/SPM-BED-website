@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HawkerHub - Feedback</title>
+
+    <link rel="stylesheet" href="feedback.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">HawkerHub</a>
+
+        <a href="index.html" class="back-link">
+            Back to Home
+        </a>
+    </nav>
+
+    <main class="page-container">
+
+        <section class="feedback-card">
+
+            <div class="feedback-header">
+                <p class="small-title">Share your experience</p>
+
+                <h1>Create Feedback</h1>
+
+                <p class="description">
+                    Select a food stall, give a rating and leave a comment.
+                </p>
+            </div>
+
+            <form id="feedbackForm">
+
+                <!-- Stall dropdown -->
+                <div class="form-group">
+                    <label for="stallID">Food Stall</label>
+
+                    <select id="stallID" name="stallID" required>
+                        <option value="">Select a food stall</option>
+
+                        <!-- Temporary stall values -->
+                        <option value="STL0000001">
+                            Ah Seng Chicken Rice
+                        </option>
+
+                        <option value="STL0000002">
+                            Uncle Lim Hokkien Mee
+                        </option>
+
+                        <option value="STL0000003">
+                            Muthu Curry House
+                        </option>
+                    </select>
+
+                    <p id="stallError" class="error-message"></p>
+                </div>
+
+                <!-- Star rating -->
+                <div class="form-group">
+                    <label>Your Rating</label>
+
+                    <div class="stars" id="starContainer">
+                        <button type="button" class="star" data-rating="1">
+                            ★
+                        </button>
+
+                        <button type="button" class="star" data-rating="2">
+                            ★
+                        </button>
+
+                        <button type="button" class="star" data-rating="3">
+                            ★
+                        </button>
+
+                        <button type="button" class="star" data-rating="4">
+                            ★
+                        </button>
+
+                        <button type="button" class="star" data-rating="5">
+                            ★
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="fbkRating" name="fbkRating">
+
+                    <p id="ratingText" class="rating-text">
+                        No rating selected
+                    </p>
+
+                    <p id="ratingError" class="error-message"></p>
+                </div>
+
+                <!-- Comment -->
+                <div class="form-group">
+                    <label for="fbkComment">Your Comment</label>
+
+                    <textarea id="fbkComment" name="fbkComment" rows="6" maxlength="200"
+                        placeholder="Tell us about your food and dining experience..."></textarea>
+
+                    <div class="comment-footer">
+                        <span>Maximum 200 characters</span>
+
+                        <span id="characterCount">
+                            0 / 200
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Success or error message -->
+                <div id="formMessage" class="form-message"></div>
+
+                <button type="submit" class="submit-button">
+                    Submit Feedback
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <script src="feedback.js"></script>
+</body>
+
+</html>

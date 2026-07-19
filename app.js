@@ -1,9 +1,10 @@
-
 require("dotenv").config();
 const express = require("express");
 const sql = require("mssql"); 
 const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
+const feedbackController = require("./controllers/feedbackController");
+const likeController = require("./controllers/likeController");
 
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
@@ -53,6 +54,28 @@ app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 app.post("/api/customers/register", validateRegistration, registerCustomer);
 app.post("/api/customers/login", validateLogin, loginCustomer);
 app.get("/api/customers/:id", verifyToken, getCustomerById);
+
+
+// ==========================================
+// youliang FEEDBACK ROUTES - youliang
+// ==========================================
+
+// Get all feedback
+app.get("/api/feedback", feedbackController.getAllFeedback);
+
+// Create feedback
+app.post("/api/feedback", feedbackController.createFeedback);
+
+
+// ==========================================
+// LIKE / FAVOURITE ROUTES
+// ==========================================
+// Like route
+app.post("/api/likes", likeController.createLike);
+app.get("/api/likes/:customerID", likeController.getCustomerLikes);
+
+
+
 
 // ==========================================
 // START SERVER AND TEST CONNECTION

@@ -246,130 +246,10 @@
     </section>
 
 
-    <!-- VIEW 4: CREATE FEEDBACK PAGE -->
-    <section id="feedback-view" class="view">
-
-        <div class="form-container">
-
-            <h2>Create Feedback</h2>
-
-            <p class="form-description">
-                Tell us about your experience with the hawker management
-                system.
-            </p>
-
-            <div id="feedback-alert" class="alert"></div>
-
-            <form id="feedback-form" onsubmit="handleCreateFeedback(event)">
-
-
-
-        
-                
-                
-                <div class="form-group">
-
-                    <label for="feedback-category">
-                        Feedback Category
-                    </label>
-
-                    <select id="feedback-category" required>
-
-                        <option value="">
-                            Select a category
-                        </option>
-
-                        <option value="Food">
-                            Food
-                        </option>
-
-                        <option value="Service">
-                            Service
-                        </option>
-
-                        <option value="Cleanliness">
-                            Cleanliness
-                        </option>
-
-                        <option value="Website">
-                            Website
-                        </option>
-
-                        <option value="Other">
-                            Other
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="feedback-rating">Rating</label>
-
-                    <select id="feedback-rating" required>
-
-                        <option value="">
-                            Select a rating
-                        </option>
-
-                        <option value="5">
-                            5 - Excellent
-                        </option>
-
-                        <option value="4">
-                            4 - Good
-                        </option>
-
-                        <option value="3">
-                            3 - Average
-                        </option>
-
-                        <option value="2">
-                            2 - Poor
-                        </option>
-
-                        <option value="1">
-                            1 - Very Poor
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="feedback-message">
-                        Feedback Message
-                    </label>
-
-                    <textarea id="feedback-message" rows="6" required maxlength="1000"
-                        placeholder="Enter your feedback"></textarea>
-
-                    <small>
-                        Maximum 1000 characters
-                    </small>
-
-                </div>
-
-                <button type="submit" id="feedback-submit-button">
-                    Submit Feedback
-                </button>
-
-            </form>
-
-        </div>
-
-    </section>
-
-
     <!-- VIEW 5: AUTHENTICATED DASHBOARD -->
     <section id="dashboard-view" class="view">
 
         <div class="dashboard-banner">
-<<<<<<< HEAD
             <h2>Welcome Back, <span id="user-display-name">User</span>!</h2>
             <p style="color: #666; margin-top: 0.5rem;">Role Authentication: <strong id="user-display-role" style="color:var(--primary-color);">Guest</strong></p>
             <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #eee;">
@@ -378,35 +258,6 @@
             <h3>Live data from the database</h3>
             <p style="color:#666; font-size:0.9rem;">Fetched from GET /api/customers/:id using your login token, confirming the front-end, back-end, and database are all connected.</p>
             <pre id="live-customer-data" style="background:#f4f4f4; padding:1rem; border-radius:4px; margin-top:0.5rem; overflow-x:auto;">Loading...</pre>
-=======
-
-            <h2>
-                Welcome Back,
-                <span id="user-display-name">User</span>!
-            </h2>
-
-            <p style="color: #666; margin-top: 0.5rem;">
-
-                Role Authentication:
-
-                <strong id="user-display-role" style="color: var(--primary-color);">
-                    Guest
-                </strong>
-
-            </p>
-
-            <hr style="
-                    margin: 1.5rem 0;
-                    border: 0;
-                    border-top: 1px solid #eee;
-                ">
-
-            <p>
-                Your secure session is active. You can use the navigation
-                links or safely log out of your account.
-            </p>
-
->>>>>>> fa2283e (any)
         </div>
 
     </section>

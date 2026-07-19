@@ -1,164 +1,188 @@
 const likeModel = require("../models/likeModel");
 
-// POST /api/likes/toggle
-async function toggleLike(req, res) {
-  try {
-    const { customerId, stallId, itemCode } = req.body;
-
-    if (!customerId || !stallId || !itemCode) {
-      return res.status(400).json({
-        message: "customerId, stallId and itemCode are required"
-      });
-    }
-
-    const customer = await likeModel.getCustomer(customerId);
-
-    if (!customer) {
-      return res.status(404).json({
-        message: "Customer not found"
-      });
-    }
-
-    const menuItem = await likeModel.getMenuItem(stallId, itemCode);
-
-    if (!menuItem) {
-      return res.status(404).json({
-        message: "Menu item not found"
-      });
-    }
-
-    const result = await likeModel.toggleLike(
-      customerId,
-      stallId,
-      itemCode
-    );
-
-    return res.status(200).json({
-      message: result.liked
-        ? "Menu item liked successfully"
-        : "Menu item unliked successfully",
-      customerId,
-      stallId,
-      itemCode,
-      liked: result.liked,
-      likeCount: result.likeCount
-    });
-  } catch (error) {
-    console.error("Controller toggleLike error:", error);
-
-    if (error.number === 2627 || error.number === 2601) {
-      return res.status(409).json({
-        message: "Customer has already liked this item"
-      });
-    }
-
-    if (error.number === 547) {
-      return res.status(400).json({
-        message: "Invalid customer or menu item"
-      });
-    }
-
-    return res.status(500).json({
-      message: "Internal server error"
-    });
-  }
-}
-
-// GET /api/likes/status/:customerId/:stallId/:itemCode
-async function getLikeStatus(req, res) {
-  try {
-    const { customerId, stallId, itemCode } = req.params;
-
-    const existingLike = await likeModel.getLike(
-      customerId,
-      stallId,
-      itemCode
-    );
-
-    const likeCount = await likeModel.getLikeCount(
-      stallId,
-      itemCode
-    );
-
-    return res.status(200).json({
-      customerId,
-      stallId,
-      itemCode,
-      liked: Boolean(existingLike),
-      likeCount
-    });
-  } catch (error) {
-    console.error("Controller getLikeStatus error:", error);
-
-    return res.status(500).json({
-      message: "Internal server error"
-    });
-  }
-}
-
-// GET /api/likes/count/:stallId/:itemCode
-async function getLikeCount(req, res) {
-  try {
-    const { stallId, itemCode } = req.params;
-
-    const menuItem = await likeModel.getMenuItem(
-      stallId,
-      itemCode
-    );
-
-    if (!menuItem) {
-      return res.status(404).json({
-        message: "Menu item not found"
-      });
-    }
-
-    const likeCount = await likeModel.getLikeCount(
-      stallId,
-      itemCode
-    );
-
-    return res.status(200).json({
-      stallId,
-      itemCode,
-      likeCount
-    });
-  } catch (error) {
-    console.error("Controller getLikeCount error:", error);
-
-    return res.status(500).json({
-      message: "Internal server error"
-    });
-  }
-}
-
-// GET /api/customers/:customerId/likes
+/*
+    GET /api/likes/:customerID
+*/
 async function getCustomerLikes(req, res) {
-  try {
-    const { customerId } = req.params;
+    try {
+        const { customerID } = req.params;
 
-    const customer = await likeModel.getCustomer(customerId);
+        if (!customerID) {
+            return res.status(400).json({
+                message: "customerID is required."
+            });
+        }
 
-    if (!customer) {
-      return res.status(404).json({
-        message: "Customer not found"
-      });
+        const likes = await likeModel.getLikesByCustomer(customerID);
+
+        return res.status(200).json({
+            message: "Liked menu items retrieved successfully.",
+            totalLikes: likes.length,
+            likes
+        });
+
+    } catch (error) {
+        console.error("Get customer likes error:", error);
+
+        return res.status(500).json({
+            message: "Unable to retrieve liked menu items.",
+            error: error.message
+        });
     }
+}
 
-    const likes = await likeModel.getCustomerLikes(customerId);
+/*
+    POST /api/likes
+*/
+async function createLike(req, res) {
+    try {
+        const {
+            customerID,
+            stallID,
+            itemCode
+        } = req.body;
 
-    return res.status(200).json(likes);
-  } catch (error) {
-    console.error("Controller getCustomerLikes error:", error);
+        if (!customerID || !stallID || !itemCode) {
+            return res.status(400).json({
+                message:
+                    "customerID, stallID and itemCode are required."
+            });
+        }
 
-    return res.status(500).json({
-      message: "Internal server error"
-    });
-  }
+        const existingLike = await likeModel.getLike(
+            customerID,
+            stallID,
+            itemCode
+        );
+
+        if (existingLike) {
+            return res.status(409).json({
+                message: "This menu item is already liked."
+            });
+        }
+
+        const newLike = await likeModel.createLike(
+            customerID,
+            stallID,
+            itemCode
+        );
+
+        return res.status(201).json({
+            message: "Menu item liked successfully.",
+            like: newLike
+        });
+
+    } catch (error) {
+        console.error("Create like error:", error);
+
+        return res.status(500).json({
+            message: "Unable to like menu item.",
+            error: error.message
+        });
+    }
+}
+
+/*
+    DELETE /api/likes/:customerID/:stallID/:itemCode
+*/
+async function deleteLike(req, res) {
+    try {
+        const {
+            customerID,
+            stallID,
+            itemCode
+        } = req.params;
+
+        const deleted = await likeModel.deleteLike(
+            customerID,
+            stallID,
+            itemCode
+        );
+
+        if (!deleted) {
+            return res.status(404).json({
+                message: "Liked menu item was not found."
+            });
+        }
+
+        return res.status(200).json({
+            message: "Menu item removed from favourites successfully."
+        });
+
+    } catch (error) {
+        console.error("Delete like error:", error);
+
+        return res.status(500).json({
+            message: "Unable to remove liked menu item.",
+            error: error.message
+        });
+    }
+}
+
+/*
+    POST /api/likes/toggle
+    Adds the like if it does not exist.
+    Removes it if it already exists.
+*/
+async function toggleLike(req, res) {
+    try {
+        const {
+            customerID,
+            stallID,
+            itemCode
+        } = req.body;
+
+        if (!customerID || !stallID || !itemCode) {
+            return res.status(400).json({
+                message:
+                    "customerID, stallID and itemCode are required."
+            });
+        }
+
+        const existingLike = await likeModel.getLike(
+            customerID,
+            stallID,
+            itemCode
+        );
+
+        if (existingLike) {
+            await likeModel.deleteLike(
+                customerID,
+                stallID,
+                itemCode
+            );
+
+            return res.status(200).json({
+                message: "Menu item removed from favourites.",
+                liked: false
+            });
+        }
+
+        const newLike = await likeModel.createLike(
+            customerID,
+            stallID,
+            itemCode
+        );
+
+        return res.status(201).json({
+            message: "Menu item added to favourites.",
+            liked: true,
+            like: newLike
+        });
+
+    } catch (error) {
+        console.error("Toggle like error:", error);
+
+        return res.status(500).json({
+            message: "Unable to update favourite.",
+            error: error.message
+        });
+    }
 }
 
 module.exports = {
-  toggleLike,
-  getLikeStatus,
-  getLikeCount,
-  getCustomerLikes
+    getCustomerLikes,
+    createLike,
+    deleteLike,
+    toggleLike
 };
