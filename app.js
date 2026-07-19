@@ -5,7 +5,7 @@ const sql = require("mssql");
 const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
 const menuController = require("./controllers/menuController");
-const cartController = require('./controllers/cartcontroller');
+const cartController = require('./controllers/cartController');
 
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
@@ -25,7 +25,6 @@ app.use(express.static("public"));
 // ==========================================
 // CART CONTROLLER
 // ==========================================
-const cartController = require("./controllers/cartController");
 // CART ROUTES
 app.get('/api/cart', cartController.getCart);
 app.post('/api/cart/add', cartController.validateCart, cartController.addToCart);

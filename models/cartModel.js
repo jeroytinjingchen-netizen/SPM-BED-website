@@ -133,7 +133,7 @@ async function addOrIncrementItem(cartId, item) {
     const checkReq = connection.request();
     checkReq.input('cartId', cartId);
     checkReq.input('stallId', item.StallID || item.stallId || item.stallID);
-    checkReq.input('itemCode', item.ItemCode || item.itemCode || item.itemCode);
+    checkReq.input('itemCode', item.ItemCode || item.itemCode || item.itemcode);
     const checkRes = await checkReq.query(checkQ);
 
     if (checkRes.recordset.length > 0) {

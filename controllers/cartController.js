@@ -9,21 +9,27 @@ const cartItemSchema = Joi.object({
   UnitPrice: Joi.number().precision(2).min(0).required(),
 });
 
+const cartBodySchema = Joi.object({
+  customerId: Joi.string().max(20),
+  customerid: Joi.string().max(20),
+  CustomerID: Joi.string().max(20),
+  StallID: Joi.string().max(10),
+  ItemCode: Joi.string().max(20),
+  Quantity: Joi.number().integer().min(1),
+  UnitPrice: Joi.number().precision(2).min(0),
+  items: Joi.array().items(cartItemSchema),
+})
+  .or('customerId', 'customerid', 'CustomerID')
+  .or('StallID', 'items')
+  .unknown(true);
+
 // Middleware to validate a single item or items array
 function validateCart(req, res, next) {
-  const payload = req.body;
-  if (Array.isArray(payload.items)) {
-    const { error } = Joi.array().items(cartItemSchema).validate(payload.items, { abortEarly: false });
-    if (error) {
-      const msg = error.details.map(d => d.message).join(', ');
-      return res.status(400).json({ error: msg });
-    }
-  } else {
-    const { error } = cartItemSchema.validate(payload);
-    if (error) {
-      const msg = error.details.map(d => d.message).join(', ');
-      return res.status(400).json({ error: msg });
-    }
+  const payload = req.body || {};
+  const { error } = cartBodySchema.validate(payload, { abortEarly: false });
+  if (error) {
+    const msg = error.details.map(d => d.message).join(', ');
+    return res.status(400).json({ error: msg });
   }
 
   next();
@@ -73,8 +79,13 @@ async function addToCart(req, res) {
     res.status(200).json({ cartId, added: results, items: updatedItems });
   } catch (error) {
     console.error('Controller addToCart error:', error);
-    if (error && error.message && error.message.includes('FOREIGN KEY')) {
-      return res.status(400).json({ error: 'Customer ID does not exist in the database. Use an existing CustomerID such as CUS000001.' });
+    if (error && error.message) {
+      if (error.message.includes('FK_Cart_Customer')) {
+        return res.status(400).json({ error: 'Customer ID does not exist in the database. Use an existing CustomerID such as CUS000001.' });
+      }
+      if (error.message.includes('FK_CartItem_MenuItem')) {
+        return res.status(400).json({ error: 'Invalid StallID or ItemCode. The selected menu item must exist in MenuItem.' });
+      }
     }
     res.status(500).json({ error: 'Error adding to cart' });
   }
