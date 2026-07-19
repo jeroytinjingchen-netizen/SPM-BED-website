@@ -12,9 +12,58 @@ async function _close(connection) {
   }
 }
 
+async function ensureCartTables() {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection.request().query(`
+      SELECT TABLE_NAME
+      FROM INFORMATION_SCHEMA.TABLES
+      WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME IN ('Cart', 'CartItem')
+    `);
+    const existing = new Set(result.recordset.map(row => row.TABLE_NAME));
+
+    if (!existing.has('Cart')) {
+      await connection.request().query(`
+        CREATE TABLE [dbo].[Cart](
+          [CartID] [char](9) NOT NULL,
+          [CustomerID] [char](9) NOT NULL,
+          [CreatedAt] [datetime] NOT NULL,
+          [UpdatedAt] [datetime] NOT NULL,
+          [CartStatus] [varchar](20) NOT NULL,
+          CONSTRAINT [PK_Cart] PRIMARY KEY CLUSTERED ([CartID] ASC)
+        ) ON [PRIMARY]
+      `);
+    }
+
+    if (!existing.has('CartItem')) {
+      await connection.request().query(`
+        CREATE TABLE [dbo].[CartItem](
+          [CartID] [char](9) NOT NULL,
+          [CartItemNo] [int] NOT NULL,
+          [StallID] [char](10) NOT NULL,
+          [ItemCode] [varchar](20) NOT NULL,
+          [Quantity] [int] NOT NULL,
+          [UnitPrice] [decimal](6, 2) NOT NULL,
+          CONSTRAINT [PK_CartItem] PRIMARY KEY CLUSTERED ([CartID] ASC, [CartItemNo] ASC)
+        ) ON [PRIMARY]
+      `);
+    }
+  } catch (error) {
+    if (error.message && error.message.includes('already exists')) {
+      return;
+    }
+    console.error('Error ensuring cart tables:', error);
+    throw error;
+  } finally {
+    await _close(connection);
+  }
+}
+
 async function createCart(customerId) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
     const cartId = generateCartId();
     const now = new Date();
@@ -29,6 +78,7 @@ async function createCart(customerId) {
     return { CartID: cartId, CustomerID: customerId, CreatedAt: now, UpdatedAt: now, CartStatus: 'Open' };
   } catch (error) {
     console.error('DB error createCart:', error);
+    console.error('Query was:', query);
     throw error;
   } finally {
     await _close(connection);
@@ -38,6 +88,7 @@ async function createCart(customerId) {
 async function getOpenCartByCustomer(customerId) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
     const query = `SELECT * FROM Cart WHERE CustomerID = @customerId AND CartStatus = 'Open'`;
     const request = connection.request();
@@ -46,6 +97,7 @@ async function getOpenCartByCustomer(customerId) {
     return result.recordset[0] || null;
   } catch (error) {
     console.error('DB error getOpenCartByCustomer:', error);
+    console.error('Query was:', query);
     throw error;
   } finally {
     await _close(connection);
@@ -55,6 +107,7 @@ async function getOpenCartByCustomer(customerId) {
 async function getCartItems(cartId) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
     const query = `SELECT * FROM CartItem WHERE CartID = @cartId ORDER BY CartItemNo`;
     const request = connection.request();
@@ -72,6 +125,7 @@ async function getCartItems(cartId) {
 async function addOrIncrementItem(cartId, item) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
 
     // See if same stall/item exists in cart
@@ -79,7 +133,7 @@ async function addOrIncrementItem(cartId, item) {
     const checkReq = connection.request();
     checkReq.input('cartId', cartId);
     checkReq.input('stallId', item.StallID || item.stallId || item.stallID);
-    checkReq.input('itemCode', item.ItemCode || item.itemCode || item.itemCode);
+    checkReq.input('itemCode', item.ItemCode || item.itemCode || item.itemcode);
     const checkRes = await checkReq.query(checkQ);
 
     if (checkRes.recordset.length > 0) {
@@ -148,6 +202,7 @@ async function updateCartTimestamp(connectionOrConn, cartId) {
 async function updateItemQuantity(cartId, cartItemNo, quantity) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
     const q = `UPDATE CartItem SET Quantity = @qty WHERE CartID = @cartId AND CartItemNo = @no`;
     const req = connection.request();
@@ -168,6 +223,7 @@ async function updateItemQuantity(cartId, cartItemNo, quantity) {
 async function removeItem(cartId, cartItemNo) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
     const q = `DELETE FROM CartItem WHERE CartID=@cartId AND CartItemNo=@no`;
     const req = connection.request();
@@ -187,6 +243,7 @@ async function removeItem(cartId, cartItemNo) {
 async function clearCart(cartId) {
   let connection;
   try {
+    await ensureCartTables();
     connection = await sql.connect(dbConfig);
     const q = `DELETE FROM CartItem WHERE CARTID=@cartId`;
     const req = connection.request();

@@ -22,6 +22,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 // ==========================================
+// CART CONTROLLER
+// ==========================================
+// CART ROUTES
+app.get('/api/cart', cartController.getCart);
+app.post('/api/cart/add', cartController.validateCart, cartController.addToCart);
+app.post('/api/cart/update', cartController.updateCartItem);
+app.post('/api/cart/remove', cartController.removeCartItem);
+app.post('/api/cart/clear', cartController.clearCart);
+
+// ==========================================
 // TEST ROUTE TO PROVE DATABASE CONNECTION
 // ==========================================
 app.get("/api/test-db", async (req, res) => {
@@ -100,3 +110,9 @@ process.on("SIGINT", async () => {
   console.log("Database connection closed.");
   process.exit(0);
 });
+
+// Menu Feature Endpoints
+app.get("/api/menu/search", menuController.searchMenu);
+app.get("/api/menu/stall/:stall_id", menuController.getMenuByStall);
+app.get("/api/menu/item/:item_id", menuController.getItemDetails);
+app.put("/api/menu/item/:item_id", menuController.updateMenuItem);
