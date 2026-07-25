@@ -95,6 +95,10 @@ async function handleLogin(e) {
 
         currentUser = data.customer;
         authToken = data.token; // save the JWT for use on protected requests
+        localStorage.setItem('hawkerhub-auth', JSON.stringify({
+            token: authToken,
+            customer: currentUser
+        }));
 
         document.getElementById('user-display-name').innerText = currentUser.name;
         document.getElementById('user-display-role').innerText = "Customer";
@@ -141,6 +145,7 @@ async function fetchLiveCustomerData(customerId) {
 function handleLogout() {
     currentUser = null;
     authToken = null;
+    localStorage.removeItem('hawkerhub-auth');
     updateNavigationUI(false);
     navigateTo('landing-view');
 }

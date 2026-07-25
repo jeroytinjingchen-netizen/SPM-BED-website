@@ -104,6 +104,25 @@ async function getOpenCartByCustomer(customerId) {
   }
 }
 
+async function getCartByIdAndCustomer(cartId, customerId) {
+  let connection;
+  try {
+    await ensureCartTables();
+    connection = await sql.connect(dbConfig);
+    const query = `SELECT * FROM Cart WHERE CartID = @cartId AND CustomerID = @customerId`;
+    const request = connection.request();
+    request.input('cartId', cartId);
+    request.input('customerId', customerId);
+    const result = await request.query(query);
+    return result.recordset[0] || null;
+  } catch (error) {
+    console.error('DB error getCartByIdAndCustomer:', error);
+    throw error;
+  } finally {
+    await _close(connection);
+  }
+}
+
 async function getCartItems(cartId) {
   let connection;
   try {
@@ -265,6 +284,7 @@ async function clearCart(cartId) {
 module.exports = {
   createCart,
   getOpenCartByCustomer,
+  getCartByIdAndCustomer,
   getCartItems,
   addOrIncrementItem,
   updateItemQuantity,

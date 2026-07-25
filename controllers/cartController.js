@@ -19,8 +19,8 @@ const cartBodySchema = Joi.object({
   UnitPrice: Joi.number().precision(2).min(0),
   items: Joi.array().items(cartItemSchema),
 })
-  .or('customerId', 'customerid', 'CustomerID')
   .or('StallID', 'items')
+  .and('StallID', 'ItemCode', 'Quantity', 'UnitPrice')
   .unknown(true);
 
 // Middleware to validate a single item or items array
@@ -38,8 +38,7 @@ function validateCart(req, res, next) {
 // Get cart for a customer (query param: customerId)
 async function getCart(req, res) {
   try {
-    const customerId = req.query.customerId || req.query.customerid;
-    if (!customerId) return res.status(400).json({ error: 'customerId is required' });
+    const customerId = req.customer.customerId;
 
     let cart = await Cart.getOpenCartByCustomer(customerId);
     if (!cart) {
@@ -61,8 +60,7 @@ async function getCart(req, res) {
 async function addToCart(req, res) {
   try {
     const body = req.body;
-    const customerId = body.customerId || body.CustomerID || body.customerid;
-    if (!customerId) return res.status(400).json({ error: 'customerId is required' });
+    const customerId = req.customer.customerId;
 
     let cart = await Cart.getOpenCartByCustomer(customerId);
     if (!cart) cart = await Cart.createCart(customerId);
@@ -99,6 +97,9 @@ async function updateCartItem(req, res) {
       return res.status(400).json({ error: 'cartId, cartItemNo and quantity are required' });
     }
 
+    const cart = await Cart.getCartByIdAndCustomer(cartId, req.customer.customerId);
+    if (!cart) return res.status(404).json({ error: 'Cart not found for this customer' });
+
     const ok = await Cart.updateItemQuantity(cartId, cartItemNo, quantity);
     if (!ok) return res.status(404).json({ error: 'Cart item not found' });
     const items = await Cart.getCartItems(cartId);
@@ -114,6 +115,9 @@ async function removeCartItem(req, res) {
   try {
     const { cartId, cartItemNo } = req.body;
     if (!cartId || typeof cartItemNo === 'undefined') return res.status(400).json({ error: 'cartId and cartItemNo are required' });
+    const cart = await Cart.getCartByIdAndCustomer(cartId, req.customer.customerId);
+    if (!cart) return res.status(404).json({ error: 'Cart not found for this customer' });
+
     const ok = await Cart.removeItem(cartId, cartItemNo);
     if (!ok) return res.status(404).json({ error: 'Cart item not found' });
     const items = await Cart.getCartItems(cartId);
@@ -129,6 +133,10 @@ async function clearCart(req, res) {
   try {
     const { cartId } = req.body;
     if (!cartId) return res.status(400).json({ error: 'cartId is required' });
+
+    const cart = await Cart.getCartByIdAndCustomer(cartId, req.customer.customerId);
+    if (!cart) return res.status(404).json({ error: 'Cart not found for this customer' });
+
     await Cart.clearCart(cartId);
     res.json({ success: true });
   } catch (error) {
