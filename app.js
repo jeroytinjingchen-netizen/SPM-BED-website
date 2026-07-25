@@ -5,7 +5,7 @@ const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
 const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
-
+const cartController = require("./controllers/cartController");
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
 const { registerCustomer, loginCustomer, getCustomerById } = require("./controllers/customerController");
