@@ -124,27 +124,27 @@ function renderMenu() {
     // Map Template Elements Dynamically onto View Container
     filtered.forEach(item => {
         const card = document.createElement("div");
-        card.className = "bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200";
+        card.className = "menu-card";
         
         card.innerHTML = `
-            <div class="p-5 flex-1">
-                <div class="flex justify-between items-start gap-2 mb-2">
-                    <span class="inline-block text-[11px] font-bold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">${item.category}</span>
-                    <span class="text-xs ${item.available ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'} px-2 py-0.5 rounded-md font-medium">
+            <div class="menu-card-body">
+                <div class="menu-card-meta">
+                    <span class="menu-card-category">${item.category}</span>
+                    <span class="menu-card-status ${item.available ? 'available' : 'out-of-stock'}">
                         ${item.available ? 'In Stock' : 'Out of Stock'}
                     </span>
                 </div>
-                <h3 class="font-bold text-gray-900 text-lg leading-snug line-clamp-1">${item.name}</h3>
-                <p class="text-gray-500 text-xs mt-1.5 line-clamp-2 leading-relaxed">${item.description}</p>
+                <h3 class="menu-card-title">${item.name}</h3>
+                <p class="menu-card-description">${item.description}</p>
             </div>
-            <div class="bg-gray-50 px-5 py-3.5 border-t border-gray-100 flex justify-between items-center mt-auto gap-2 flex-wrap">
-                <span class="text-lg font-bold text-gray-900">$${item.price.toFixed(2)}</span>
-                <div class="flex gap-2">
-                    <button onclick="openItemDetailsPage(${item.id})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 focus:outline-hidden cursor-pointer">
-                        View Details 
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+            <div class="menu-card-footer">
+                <span class="menu-card-price">$${item.price.toFixed(2)}</span>
+                <div class="menu-card-actions">
+                    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
+                        View Details
+                        <svg xmlns="http://www.w3.org/2000/svg" class="menu-card-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </button>
-                    <button onclick="addToCart(${item.id})" class="px-3 py-2 text-xs font-semibold rounded-full bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 transition-colors focus:outline-hidden">
+                    <button onclick="addToCart(${item.id})" class="menu-card-button">
                         Add to Cart
                     </button>
                 </div>
