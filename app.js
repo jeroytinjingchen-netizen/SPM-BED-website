@@ -7,7 +7,6 @@ const cartController = require("./controllers/cartController");
 const menuController = require("./controllers/menuController");
 const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
-const cartController = require("./controllers/cartController");
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
 const { registerCustomer, loginCustomer, getCustomerById } = require("./controllers/customerController");
@@ -78,7 +77,11 @@ app.get("/api/feedback", feedbackController.getAllFeedback);
 // Create feedback
 app.post("/api/feedback", feedbackController.createFeedback);
 
+// update feedback
+app.put("/api/feedback/:fbkID", feedbackController.updateFeedback);
 
+// delete feedback
+app.delete("/api/feedback/:fbkID", feedbackController.deleteFeedback);
 // ==========================================
 // LIKE / FAVOURITE ROUTES
 // ==========================================
