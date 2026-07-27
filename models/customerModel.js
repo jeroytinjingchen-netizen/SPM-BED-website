@@ -61,8 +61,37 @@ async function createCustomer({ custName, custNric, custContactNo, custEmail, ha
     return newId;
 }
 
+// Updates a customer's editable fields (name, contact number, email).
+// NRIC and password are intentionally excluded - NRIC shouldn't change,
+// and password updates deserve their own dedicated, more careful endpoint.
+async function updateCustomer(customerId, { custName, custContactNo, custEmail }) {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request()
+        .input("id", sql.Char(9), customerId)
+        .input("name", sql.VarChar(50), custName)
+        .input("contact", sql.VarChar(15), custContactNo)
+        .input("email", sql.VarChar(50), custEmail)
+        .query(`UPDATE dbo.Customer
+                SET CustName = @name, CustContactNo = @contact, CustEmail = @email
+                WHERE CustomerID = @id`);
+
+    return result.rowsAffected[0] > 0; // true if a row was actually updated
+}
+
+// Deletes a customer row by ID. Returns true if a row was deleted.
+async function deleteCustomer(customerId) {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request()
+        .input("id", sql.Char(9), customerId)
+        .query("DELETE FROM dbo.Customer WHERE CustomerID = @id");
+
+    return result.rowsAffected[0] > 0;
+}
+
 module.exports = {
     findCustomerByEmail,
     findCustomerById,
-    createCustomer
+    createCustomer,
+    updateCustomer,
+    deleteCustomer
 };

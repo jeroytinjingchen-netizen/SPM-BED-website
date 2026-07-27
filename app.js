@@ -9,7 +9,7 @@ const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
-const { registerCustomer, loginCustomer, getCustomerById } = require("./controllers/customerController");
+const { registerCustomer, loginCustomer, getCustomerById, updateCustomerProfile, deleteCustomerProfile } = require("./controllers/customerController");
 
 const app = express();
 const port = 3000;
@@ -65,6 +65,8 @@ app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 app.post("/api/customers/register", validateRegistration, registerCustomer);
 app.post("/api/customers/login", validateLogin, loginCustomer);
 app.get("/api/customers/:id", verifyToken, getCustomerById);
+app.put("/api/customers/:id", verifyToken, updateCustomerProfile);
+app.delete("/api/customers/:id", verifyToken, deleteCustomerProfile);
 
 
 // ==========================================
