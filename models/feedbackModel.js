@@ -87,7 +87,52 @@ async function createFeedback(feedbackData) {
   return result.recordset[0];
 }
 
+async function updateFeedback(fbkID, feedbackData) {
+  const pool = await sql.connect(dbConfig);
+
+  const updateFields = [];
+  const request = pool.request().input("fbkID", sql.Char(9), fbkID);
+
+  if (feedbackData.fbkComment !== undefined) {
+    request.input("fbkComment", sql.VarChar(200), feedbackData.fbkComment || null);
+    updateFields.push("FbkComment = @fbkComment");
+  }
+
+  if (feedbackData.fbkRating !== undefined) {
+    request.input("fbkRating", sql.TinyInt, feedbackData.fbkRating);
+    updateFields.push("FbkRating = @fbkRating");
+  }
+
+  if (!updateFields.length) {
+    return null;
+  }
+
+  const result = await request.query(`
+    UPDATE dbo.Feedback
+    SET ${updateFields.join(", ")}
+    WHERE FbkID = @fbkID
+    SELECT * FROM dbo.Feedback WHERE FbkID = @fbkID
+  `);
+
+  return result.recordset[0] || null;
+}
+
+async function deleteFeedback(fbkID) {
+  const pool = await sql.connect(dbConfig);
+
+  const result = await pool.request()
+    .input("fbkID", sql.Char(9), fbkID)
+    .query(`
+      DELETE FROM dbo.Feedback
+      WHERE FbkID = @fbkID
+    `);
+
+  return result.rowsAffected[0] > 0;
+}
+
 module.exports = {
   getAllFeedback,
-  createFeedback
+  createFeedback,
+  updateFeedback,
+  deleteFeedback
 };

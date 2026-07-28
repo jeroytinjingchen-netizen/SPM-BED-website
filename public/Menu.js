@@ -57,6 +57,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// ==========================================
+// BACK-END API FETCH (FED -> BED CONNECTION)
+// ==========================================
+async function fetchMenuItemsFromBackend() {
+    try {
+        // Hits your express route: app.get("/api/menu/search", menuController.searchMenu)
+        const response = await fetch('/api/menu/search'); 
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Handle both direct arrays or wrapped object responses (e.g. { items: [...] })
+        menuItems = Array.isArray(data) ? data : (data.items || data.menuItems || []);
+        
+        renderMenu(); 
+    } catch (error) {
+        console.error("Error fetching menu items from BED:", error);
+        const itemCountEl = document.getElementById("item-count");
+        if (itemCountEl) {
+            itemCountEl.textContent = "Error loading menu from database.";
+        }
+    }
+}
 // Navigation View Engine (Handles opening standard standalone page views)
 function navigateTo(viewId) {
     // Hide all existing view templates 
