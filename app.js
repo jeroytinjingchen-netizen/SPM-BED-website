@@ -57,6 +57,7 @@ app.get("/api/test-db", async (req, res) => {
 // ==========================================
 app.get("/stalls/:stallId/menu", menuItemController.getMenu);
 app.post("/stalls/:stallId/menu", menuItemController.addMenu);
+app.delete("/stalls/:stallId/menu/:itemCode", menuItemController.deleteMenu);
 
 // ==========================================
 // CUSTOMER ROUTES
@@ -80,10 +81,10 @@ app.get("/api/feedback", feedbackController.getAllFeedback);
 app.post("/api/feedback", feedbackController.createFeedback);
 
 // update feedback
-app.put("/api/feedback/:fbkID", feedbackController.updateFeedback);
+ app.put("/api/feedback/:fbkID", feedbackController.updateFeedback);
 
 // delete feedback
-app.delete("/api/feedback/:fbkID", feedbackController.deleteFeedback);
+ app.delete("/api/feedback/:fbkID", feedbackController.deleteFeedback);
 // ==========================================
 // LIKE / FAVOURITE ROUTES
 // ==========================================
