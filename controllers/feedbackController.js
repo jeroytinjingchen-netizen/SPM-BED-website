@@ -1,82 +1,200 @@
-// controllers/feedbackController.js
-
 const feedbackModel = require("../models/feedbackModel");
-console.log("Feedback model exports:", feedbackModel);
 
 // GET /api/feedback
 async function getAllFeedback(req, res) {
-  try {
-    const feedback = await feedbackModel.getAllFeedback();
+    try {
+        const feedback = await feedbackModel.getAllFeedback();
 
-    return res.status(200).json({
-      message: "Feedback retrieved successfully.",
-      totalFeedback: feedback.length,
-      feedback
-    });
-  } catch (error) {
-    console.error("Get all feedback error:", error);
+        return res.status(200).json({
+            message: "Feedback retrieved successfully.",
+            totalFeedback: feedback.length,
+            feedback
+        });
 
-    return res.status(500).json({
-      message: "Unable to retrieve feedback.",
-      error: error.message
-    });
-  }
+    } catch (error) {
+        console.error("Get all feedback error:", error);
+
+        return res.status(500).json({
+            message: "Unable to retrieve feedback.",
+            error: error.message
+        });
+    }
 }
 
 // POST /api/feedback
 async function createFeedback(req, res) {
-  try {
-    const {
-      fbkComment,
-      fbkRating,
-      customerID,
-      stallID
-    } = req.body;
+    try {
+        const {
+            fbkComment,
+            fbkRating,
+            customerID,
+            stallID
+        } = req.body;
 
-    if (!customerID || !stallID || fbkRating === undefined) {
-      return res.status(400).json({
-        message:
-          "customerID, stallID and fbkRating are required."
-      });
+        if (!customerID || !stallID || fbkRating === undefined) {
+            return res.status(400).json({
+                message:
+                    "customerID, stallID and fbkRating are required."
+            });
+        }
+
+        const rating = Number(fbkRating);
+
+        if (
+            !Number.isInteger(rating) ||
+            rating < 1 ||
+            rating > 5
+        ) {
+            return res.status(400).json({
+                message: "fbkRating must be between 1 and 5."
+            });
+        }
+
+        const comment =
+            typeof fbkComment === "string"
+                ? fbkComment.trim()
+                : null;
+
+        if (comment && comment.length > 200) {
+            return res.status(400).json({
+                message: "fbkComment cannot exceed 200 characters."
+            });
+        }
+
+        const newFeedback = await feedbackModel.createFeedback({
+            fbkComment: comment,
+            fbkRating: rating,
+            customerID,
+            stallID
+        });
+
+        return res.status(201).json({
+            message: "Feedback created successfully.",
+            feedback: newFeedback
+        });
+
+    } catch (error) {
+        console.error("Create feedback error:", error);
+
+        if (error.number === 547) {
+            return res.status(400).json({
+                message: "The customerID or stallID does not exist."
+            });
+        }
+
+        return res.status(500).json({
+            message: "Unable to create feedback.",
+            error: error.message
+        });
     }
+}
 
-    const rating = Number(fbkRating);
+// PUT /api/feedback/:fbkID -- update feedback
+async function updateFeedback(req, res) {
+    try {
+        const { fbkID } = req.params;
 
-    if (
-      !Number.isInteger(rating) ||
-      rating < 1 ||
-      rating > 5
-    ) {
-      return res.status(400).json({
-        message: "fbkRating must be between 1 and 5."
-      });
+        const {
+            fbkComment,
+            fbkRating,
+            stallID
+        } = req.body;
+
+        if (!stallID || fbkRating === undefined) {
+            return res.status(400).json({
+                message: "stallID and fbkRating are required."
+            });
+        }
+
+        const rating = Number(fbkRating);
+
+        if (
+            !Number.isInteger(rating) ||
+            rating < 1 ||
+            rating > 5
+        ) {
+            return res.status(400).json({
+                message: "fbkRating must be between 1 and 5."
+            });
+        }
+
+        const comment =
+            typeof fbkComment === "string"
+                ? fbkComment.trim()
+                : null;
+
+        if (comment && comment.length > 200) {
+            return res.status(400).json({
+                message: "fbkComment cannot exceed 200 characters."
+            });
+        }
+
+        const updatedFeedback =
+            await feedbackModel.updateFeedback(fbkID, {
+                fbkComment: comment,
+                fbkRating: rating,
+                stallID
+            });
+
+        if (!updatedFeedback) {
+            return res.status(404).json({
+                message: "Feedback not found."
+            });
+        }
+
+        return res.status(200).json({
+            message: "Feedback updated successfully.",
+            feedback: updatedFeedback
+        });
+
+    } catch (error) {
+        console.error("Update feedback error:", error);
+
+        if (error.number === 547) {
+            return res.status(400).json({
+                message: "The selected stallID does not exist."
+            });
+        }
+
+        return res.status(500).json({
+            message: "Unable to update feedback.",
+            error: error.message
+        });
     }
+}
 
-    const newFeedback = await feedbackModel.createFeedback({
-      fbkComment:
-        typeof fbkComment === "string"
-          ? fbkComment.trim()
-          : null,
-      fbkRating: rating,
-      customerID,
-      stallID
-    });
+// DELETE /api/feedback/:fbkID -- Delete feedback
+async function deleteFeedback(req, res) {
+    try {
+        const { fbkID } = req.params;
 
-    return res.status(201).json({
-      message: "Feedback created successfully.",
-      feedback: newFeedback
-    });
-  } catch (error) {
-    console.error("Create feedback error:", error);
+        const deletedFeedback =
+            await feedbackModel.deleteFeedback(fbkID);
 
-    return res.status(500).json({
-      message: "Unable to create feedback.",
-      error: error.message
-    });
-  }
+        if (!deletedFeedback) {
+            return res.status(404).json({
+                message: "Feedback not found."
+            });
+        }
+
+        return res.status(200).json({
+            message: "Feedback deleted successfully.",
+            feedback: deletedFeedback
+        });
+
+    } catch (error) {
+        console.error("Delete feedback error:", error);
+
+        return res.status(500).json({
+            message: "Unable to delete feedback.",
+            error: error.message
+        });
+    }
 }
 
 module.exports = {
-  getAllFeedback,
-  createFeedback
+    getAllFeedback,
+    createFeedback,
+    updateFeedback,
+    deleteFeedback
 };

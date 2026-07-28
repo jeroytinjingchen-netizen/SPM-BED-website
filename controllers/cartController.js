@@ -1,4 +1,4 @@
-const joi = require("joi");
+const Joi = require("joi");
 const Cart = require('../models/cartmodel');
 
 // Validation schema for single cart item
