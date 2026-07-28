@@ -92,3 +92,21 @@ exports.updateMenuItem = async (req, res, next) => {
     next(err);
   }
 };
+
+const db = require('../dbconfig');
+
+// ... (keep any existing controller functions you already have here) ...
+
+// ADD YOUR NEW MENU FUNCTION AT THE BOTTOM:
+exports.getMenuItems = async (req, res) => {
+    try {
+        // Query your database or return JSON array
+        const menuItems = [
+            { id: 1, name: "Signature Hainanese Chicken Rice", category: "Mains", price: 5.50, description: "Tender chicken with rice.", available: true },
+            { id: 2, name: "Iced Kopi Melaka", category: "Beverages", price: 2.80, description: "Dark roasted coffee.", available: true }
+        ];
+        res.status(200).json(menuItems);
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
