@@ -1,4 +1,4 @@
-        :root {
+:root {
             --primary-color: #d9381e; /* Singapore Hawker Red tint */
             --dark-color: #2b2b2b;
             --light-color: #f8f9fa;
@@ -67,6 +67,23 @@
 
         .btn-primary:hover {
             background-color: #b82d17;
+        }
+
+        .btn-danger {
+            background-color: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 0.75rem 1.2rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--primary-color);
+            color: white;
         }
 
         /* App Views Configuration */
@@ -278,5 +295,3 @@
                     cursor: not-allowed;
                     opacity: 0.65;
                 }
-
-
