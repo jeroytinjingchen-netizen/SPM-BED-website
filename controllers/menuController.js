@@ -1,112 +1,218 @@
-const sql = require('mssql');
-const dbConfig = require('../dbConfig'); 
+const sql = require("mssql");
+const dbConfig = require("../dbConfig");
 
-// 1. GET: View Menu by Vendor/Stall ID
-exports.getMenuByStall = async (req, res, next) => {
-  const { stall_id } = req.params;
-
-  try {
-    const pool = await sql.connect(dbConfig); 
-    const result = await pool.request()
-      .input('VendorId', sql.Int, stall_id) // Mapping param to an Integer
-      // Targets the exact column 'vendor_id' inside the 'MenuItems' table
-      .query('SELECT * FROM MenuItems WHERE vendor_id = @VendorId'); 
-
-    res.status(200).json(result.recordset);
-  } catch (err) {
-    next(err);
-  }
-};
-
-// 2. GET: Search Menu Items by Keyword
+// ==========================================
+// 1. GET: Search Menu Items by Keyword
+// ==========================================
 exports.searchMenu = async (req, res, next) => {
-  const { q } = req.query;
+    const q = req.query.q || "";
 
-  try {
-    const pool = await sql.connect(dbConfig);
-    const result = await pool.request()
-      .input('SearchQuery', sql.VarChar, `%${q}%`)
-      .query('SELECT * FROM MenuItems WHERE item_name LIKE @SearchQuery OR description LIKE @SearchQuery');
-
-    res.status(200).json(result.recordset);
-  } catch (err) {
-    next(err);
-  }
-};
-
-// 3. GET: View Individual Menu Item Details
-exports.getItemDetails = async (req, res, next) => {
-  const { item_id } = req.params; 
-
-  try {
-    const pool = await sql.connect(dbConfig);
-    const result = await pool.request()
-      .input('ItemId', sql.Int, item_id)
-      .query('SELECT * FROM MenuItems WHERE id = @ItemId');
-
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ message: "Menu item not found." });
-    }
-
-    res.status(200).json(result.recordset[0]);
-  } catch (err) {
-    next(err);
-  }
-};
-
-// 4. PUT: Update Menu Item Details (Your Checkpoint Feature!)
-exports.updateMenuItem = async (req, res, next) => {
-  const { item_id } = req.params; 
-  const { item_name, description, price, availability } = req.body;
-
-  // Validation checking matching the correct keys
-  if (!item_name || price === undefined || availability === undefined) {
-    return res.status(400).json({ 
-      message: "item_name, price, and availability are required fields." 
-    });
-  }
-
-  try {
-    const pool = await sql.connect(dbConfig);
-    const result = await pool.request()
-      .input('ItemId', sql.Int, item_id)
-      .input('ItemName', sql.VarChar(100), item_name)
-      .input('Desc', sql.Text, description || null)
-      .input('Price', sql.Decimal(10, 2), price)
-      .input('Available', sql.Bit, availability)
-      .query(`
-        UPDATE MenuItems 
-        SET item_name = @ItemName, description = @Desc, price = @Price, availability = @Available 
-        WHERE id = @ItemId
-      `);
-
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ message: "Menu item not found." });
-    }
-
-    res.status(200).json({ 
-      message: "Menu item updated successfully!",
-      updatedItem: { id: item_id, item_name, description, price, availability }
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-const db = require('../dbconfig');
-
-// ... (keep any existing controller functions you already have here) ...
-
-// ADD YOUR NEW MENU FUNCTION AT THE BOTTOM:
-exports.getMenuItems = async (req, res) => {
     try {
-        // Query your database or return JSON array
-        const menuItems = [
-            { id: 1, name: "Signature Hainanese Chicken Rice", category: "Mains", price: 5.50, description: "Tender chicken with rice.", available: true },
-            { id: 2, name: "Iced Kopi Melaka", category: "Beverages", price: 2.80, description: "Dark roasted coffee.", available: true }
-        ];
-        res.status(200).json(menuItems);
-    } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input("SearchQuery", sql.VarChar, `%${q}%`)
+            .query(`
+                SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory 
+                FROM dbo.MenuItem 
+                WHERE ItemDesc LIKE @SearchQuery OR ItemCategory LIKE @SearchQuery
+            `);
+
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 2. GET: Filter Menu Items by Category
+// Feature: Filter Menu Items by Category & Dietary Preferences
+// ==========================================
+exports.filterMenu = async (req, res, next) => {
+    const { category } = req.query; // e.g. /api/menu/filter?category=Mains
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
+        
+        let query = "SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory FROM dbo.MenuItem";
+        if (category && category !== "All") {
+            request.input("Category", sql.VarChar(30), category);
+            query += " WHERE ItemCategory = @Category";
+        }
+
+        const result = await request.query(query);
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 3. GET: Retrieve Popular / Top-Selling Menu Items
+// Feature: Retrieve Popular / Top-Selling Menu Items
+// ==========================================
+exports.getPopularItems = async (req, res, next) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request().query(`
+            SELECT TOP 5 
+                m.StallID, 
+                m.ItemCode, 
+                m.ItemDesc, 
+                m.ItemPrice, 
+                m.ItemCategory,
+                COUNT(l.CustomerID) AS TotalLikes
+            FROM dbo.MenuItem m
+            LEFT JOIN dbo.Likes l ON m.StallID = l.StallID AND m.ItemCode = l.ItemCode
+            GROUP BY m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory
+            ORDER BY TotalLikes DESC
+        `);
+
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 4. GET: Fetch Menu Items by Specific Hawker Stall
+// Feature: Fetch Menu Items by Specific Hawker Stall
+// ==========================================
+exports.getMenuByStall = async (req, res, next) => {
+    const { stall_id } = req.params;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input("StallID", sql.Char(10), stall_id)
+            .query("SELECT * FROM dbo.MenuItem WHERE StallID = @StallID");
+
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 5. GET: View Individual Item Details
+// ==========================================
+exports.getItemDetails = async (req, res, next) => {
+    const { item_id } = req.params;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input("ItemId", sql.VarChar(20), item_id)
+            .query("SELECT * FROM dbo.MenuItem WHERE ItemCode = @ItemId");
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: "Menu item not found." });
+        }
+
+        res.status(200).json(result.recordset[0]);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 6. GET: 3rd-Party API Currency Conversion Integration
+// ==========================================
+exports.convertPrice = async (req, res, next) => {
+    const { price, currency } = req.query;
+
+    if (!price || !currency) {
+        return res.status(400).json({ message: "price and currency parameters are required." });
+    }
+
+    try {
+        const response = await fetch("https://open.er-api.com/v6/latest/SGD");
+        const data = await response.json();
+
+        const targetRate = data.rates[currency.toUpperCase()];
+        if (!targetRate) {
+            return res.status(400).json({ message: `Currency '${currency}' not supported.` });
+        }
+
+        const convertedAmount = (parseFloat(price) * targetRate).toFixed(2);
+
+        res.status(200).json({
+            originalPriceSGD: parseFloat(price),
+            targetCurrency: currency.toUpperCase(),
+            exchangeRate: targetRate,
+            convertedPrice: parseFloat(convertedAmount)
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 7. POST: Compare Menu Items Side-by-Side (Customer Feature)
+// ==========================================
+exports.compareMenuItems = async (req, res, next) => {
+    const { itemIds } = req.body; // Expects array e.g. ["ITM01", "ITM02"]
+
+    if (!Array.isArray(itemIds) || itemIds.length === 0) {
+        return res.status(400).json({ message: "Provide an array of itemIds to compare." });
+    }
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
+        
+        const paramNames = itemIds.map((id, index) => {
+            const paramName = `id${index}`;
+            request.input(paramName, sql.VarChar(20), id);
+            return `@${paramName}`;
+        });
+
+        const query = `SELECT * FROM dbo.MenuItem WHERE ItemCode IN (${paramNames.join(",")})`;
+        const result = await request.query(query);
+
+        res.status(200).json({
+            totalCompared: result.recordset.length,
+            items: result.recordset
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 8. POST: Save Customer Search Term Log (Customer Feature)
+// ==========================================
+exports.saveSearchHistory = async (req, res, next) => {
+    const { searchTerm } = req.body;
+    const customerId = req.customer?.customerId;
+
+    if (!searchTerm) {
+        return res.status(400).json({ message: "Search term is required." });
+    }
+
+    try {
+        res.status(201).json({
+            message: "Search query recorded successfully.",
+            customerId: customerId || "Guest",
+            searchTerm
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ==========================================
+// 9. DELETE: Clear Customer Search History (Customer Feature)
+// ==========================================
+exports.clearSearchHistory = async (req, res, next) => {
+    const customerId = req.customer?.customerId;
+
+    try {
+        res.status(200).json({
+            message: "Customer search session history cleared.",
+            customerId: customerId || "Guest"
+        });
+    } catch (err) {
+        next(err);
     }
 };

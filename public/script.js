@@ -8,9 +8,11 @@ function navigateTo(viewId) {
     const restrictedPages = ['dashboard-view'];
     if (restrictedPages.includes(viewId) && !currentUser) {
         const loginAlert = document.getElementById('login-alert');
-        loginAlert.className = "alert alert-danger";
-        loginAlert.innerText = "Access Denied. Please log into an active profile first.";
-        loginAlert.style.display = "block";
+        if (loginAlert) {
+            loginAlert.className = "alert alert-danger";
+            loginAlert.innerText = "Access Denied. Please log into an active profile first.";
+            loginAlert.style.display = "block";
+        }
         navigateTo('login-view');
         return;
     }
@@ -19,7 +21,10 @@ function navigateTo(viewId) {
         view.classList.remove('active');
     });
 
-    document.getElementById(viewId).classList.add('active');
+    const target = document.getElementById(viewId);
+    if (target) {
+        target.classList.add('active');
+    }
     window.scrollTo(0, 0);
 }
 
@@ -27,7 +32,7 @@ function navigateTo(viewId) {
 async function handleRegistration(e) {
     e.preventDefault();
     const alertBox = document.getElementById('register-alert');
-    alertBox.style.display = "none";
+    if (alertBox) alertBox.style.display = "none";
 
     const custName = document.getElementById('reg-name').value.trim();
     const custEmail = document.getElementById('reg-email').value.trim().toLowerCase();
@@ -61,9 +66,18 @@ async function handleRegistration(e) {
 
         document.getElementById('register-form').reset();
 
-        const loginAlert = document.getElementById('login-alert');
-        showAlert(loginAlert, "success", `Registration successful! Your Customer ID is ${data.customerId}. You may now sign in.`);
-        navigateTo('login-view');
+        // Store auth details if returned by register endpoint
+        if (data.token) {
+            authToken = data.token;
+            currentUser = data.customer || { customerId: data.customerId, name: custName, email: custEmail };
+            localStorage.setItem('hawkerhub-auth', JSON.stringify({
+                token: authToken,
+                customer: currentUser
+            }));
+        }
+
+        // Redirect directly to Menu.html after successful registration
+        window.location.href = 'Menu.html';
     } catch (err) {
         console.error(err);
         showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
@@ -74,7 +88,7 @@ async function handleRegistration(e) {
 async function handleLogin(e) {
     e.preventDefault();
     const alertBox = document.getElementById('login-alert');
-    alertBox.style.display = "none";
+    if (alertBox) alertBox.style.display = "none";
 
     const custEmail = document.getElementById('login-email').value.trim().toLowerCase();
     const custPassword = document.getElementById('login-password').value;
@@ -100,25 +114,27 @@ async function handleLogin(e) {
             customer: currentUser
         }));
 
-        document.getElementById('user-display-name').innerText = currentUser.name;
-        document.getElementById('user-display-role').innerText = "Customer";
+        const nameEl = document.getElementById('user-display-name');
+        if (nameEl) nameEl.innerText = currentUser.name || currentUser.CustName || "Customer";
+        
+        const roleEl = document.getElementById('user-display-role');
+        if (roleEl) roleEl.innerText = "Customer";
 
         document.getElementById('login-form').reset();
         updateNavigationUI(true);
-        navigateTo('dashboard-view');
 
-        // Prove the whole chain works: front-end -> API -> database, using the token
-        fetchLiveCustomerData(currentUser.customerId);
+        // Redirect directly to Menu.html upon login
+        window.location.href = 'Menu.html';
     } catch (err) {
         console.error(err);
         showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
     }
 }
 
-// GET /api/customers/:id, using the stored JWT - this is what shows up
-// as a matching request in Postman/your server terminal logs.
+// GET /api/customers/:id using stored JWT
 async function fetchLiveCustomerData(customerId) {
     const output = document.getElementById('live-customer-data');
+    if (!output) return;
     output.innerText = "Loading...";
 
     try {
@@ -136,10 +152,14 @@ async function fetchLiveCustomerData(customerId) {
 
         output.innerText = JSON.stringify(data, null, 2);
 
-        // Pre-fill the "Update Your Profile" form with the values currently in the database
-        document.getElementById('update-name').value = data.CustName || "";
-        document.getElementById('update-contact').value = data.CustContactNo || "";
-        document.getElementById('update-email').value = data.CustEmail || "";
+        // Pre-fill the "Update Your Profile" form
+        const updateName = document.getElementById('update-name');
+        const updateContact = document.getElementById('update-contact');
+        const updateEmail = document.getElementById('update-email');
+
+        if (updateName) updateName.value = data.CustName || "";
+        if (updateContact) updateContact.value = data.CustContactNo || "";
+        if (updateEmail) updateEmail.value = data.CustEmail || "";
     } catch (err) {
         console.error(err);
         output.innerText = "Could not reach the server.";
@@ -150,7 +170,7 @@ async function fetchLiveCustomerData(customerId) {
 async function handleUpdateProfile(e) {
     e.preventDefault();
     const alertBox = document.getElementById('update-alert');
-    alertBox.style.display = "none";
+    if (alertBox) alertBox.style.display = "none";
 
     if (!currentUser || !authToken) {
         showAlert(alertBox, "danger", "Your session has expired. Please log in again.");
@@ -162,8 +182,10 @@ async function handleUpdateProfile(e) {
     const custEmail = document.getElementById('update-email').value.trim().toLowerCase();
 
     const submitBtn = document.getElementById('update-submit-btn');
-    submitBtn.disabled = true;
-    submitBtn.innerText = "Saving...";
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Saving...";
+    }
 
     try {
         const response = await fetch(`${API_BASE}/${currentUser.customerId}`, {
@@ -182,32 +204,34 @@ async function handleUpdateProfile(e) {
             return;
         }
 
-        // Keep the in-memory user, displayed name, and localStorage in sync with what was just saved
         currentUser.name = custName;
         currentUser.email = custEmail;
-        document.getElementById('user-display-name').innerText = currentUser.name;
+        
+        const nameEl = document.getElementById('user-display-name');
+        if (nameEl) nameEl.innerText = currentUser.name;
+
         localStorage.setItem('hawkerhub-auth', JSON.stringify({
             token: authToken,
             customer: currentUser
         }));
 
         showAlert(alertBox, "success", data.message || "Profile updated successfully.");
-
-        // Refresh the "Live data from the database" panel so it reflects the change
         fetchLiveCustomerData(currentUser.customerId);
     } catch (err) {
         console.error(err);
         showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = "Save Changes";
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Save Changes";
+        }
     }
 }
 
 // Account Deletion Handler Engine (DELETE /api/customers/:id)
 async function handleDeleteAccount() {
     const alertBox = document.getElementById('delete-alert');
-    alertBox.style.display = "none";
+    if (alertBox) alertBox.style.display = "none";
 
     if (!currentUser || !authToken) {
         showAlert(alertBox, "danger", "Your session has expired. Please log in again.");
@@ -220,8 +244,10 @@ async function handleDeleteAccount() {
     if (!confirmed) return;
 
     const deleteBtn = document.getElementById('delete-account-btn');
-    deleteBtn.disabled = true;
-    deleteBtn.innerText = "Deleting...";
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerText = "Deleting...";
+    }
 
     try {
         const response = await fetch(`${API_BASE}/${currentUser.customerId}`, {
@@ -232,10 +258,11 @@ async function handleDeleteAccount() {
         const data = await response.json();
 
         if (!response.ok) {
-            // e.g. 409 when the account still has related orders/feedback referencing it
             showAlert(alertBox, "danger", data.message || "Could not delete account.");
-            deleteBtn.disabled = false;
-            deleteBtn.innerText = "Delete My Account";
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.innerText = "Delete My Account";
+            }
             return;
         }
 
@@ -244,8 +271,10 @@ async function handleDeleteAccount() {
     } catch (err) {
         console.error(err);
         showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
-        deleteBtn.disabled = false;
-        deleteBtn.innerText = "Delete My Account";
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.innerText = "Delete My Account";
+        }
     }
 }
 
@@ -260,6 +289,7 @@ function handleLogout() {
 
 // Context Utility Alert Box Presenter Script
 function showAlert(element, type, message) {
+    if (!element) return;
     element.className = `alert alert-${type}`;
     element.innerText = message;
     element.style.display = "block";
@@ -268,17 +298,35 @@ function showAlert(element, type, message) {
 // Dynamic Nav Items Display Synchronization Renderer Layout Engine
 function updateNavigationUI(isLoggedIn) {
     const menu = document.getElementById('nav-menu');
+    if (!menu) return;
+
     if (isLoggedIn) {
         menu.innerHTML = `
+            <li><a href="Menu.html">Menu</a></li>
             <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
             <li><a onclick="handleLogout()" class="btn-primary">Log Out</a></li>
         `;
     } else {
         menu.innerHTML = `
             <li><a onclick="navigateTo('landing-view')">Home</a></li>
-            <li><a onclick="navigateTo('feedback-view')">Create Feedback</a></li>
+            <li><a href="Menu.html">Menu</a></li>
             <li><a onclick="navigateTo('login-view')">Log In</a></li>
             <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
         `;
     }
 }
+
+// Check saved auth state on page load
+document.addEventListener("DOMContentLoaded", () => {
+    const savedAuth = localStorage.getItem('hawkerhub-auth');
+    if (savedAuth) {
+        try {
+            const parsed = JSON.parse(savedAuth);
+            authToken = parsed.token;
+            currentUser = parsed.customer;
+            updateNavigationUI(true);
+        } catch (e) {
+            console.error("Failed to restore session:", e);
+        }
+    }
+});

@@ -5,6 +5,7 @@ const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
 const cartController = require("./controllers/cartController");
 const menuController = require("./controllers/menuController");
+const menuRoutes = require("./routes/menuRoutes");
 const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
@@ -115,6 +116,9 @@ app.post("/api/feedback", feedbackController.createFeedback);
 app.post("/api/likes", likeController.createLike);
 app.get("/api/likes/:customerID", likeController.getCustomerLikes);
 
+
+
+
 // ==========================================
 // START SERVER AND TEST CONNECTION
 // ==========================================
@@ -139,8 +143,3 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-// Menu Feature Endpoints
-app.get("/api/menu/search", menuController.searchMenu);
-app.get("/api/menu/stall/:stall_id", menuController.getMenuByStall);
-app.get("/api/menu/item/:item_id", menuController.getItemDetails);
-app.put("/api/menu/item/:item_id", menuController.updateMenuItem);

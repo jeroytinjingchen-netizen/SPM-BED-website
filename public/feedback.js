@@ -86,11 +86,15 @@ const token = authData.token;
             }
 
             showFeedbackMessage(
-                "Feedback submitted successfully!",
-                "success"
+            "Feedback submitted successfully!",
+             "success"
             );
-
+            // Reset the form after successful submission
             feedbackForm.reset();
+
+            setTimeout(() => {
+            window.location.href = "Index.html";
+            }, 1000);
 
         } catch (error) {
             console.error("Feedback error:", error);
