@@ -2,19 +2,19 @@ const orderHistoryModel = require('../models/orderHistoryModel');
 
 function buildOrderHistory(orderRow) {
   const items = (orderRow.items || []).map((item) => ({
-    code: item.ItemCode,
-    name: item.ItemDesc || item.ItemCode,
-    quantity: Number(item.Quantity || 0),
-    unitPrice: Number(item.UnitPrice || 0),
-    lineTotal: Number(item.Quantity || 0) * Number(item.UnitPrice || 0)
+    code: item.ItemCode || item.code,
+    name: item.ItemDesc || item.name || item.ItemCode || item.code,
+    quantity: Number(item.Quantity || item.quantity || 0),
+    unitPrice: Number(item.UnitPrice || item.unitPrice || 0),
+    lineTotal: Number(item.Quantity || item.quantity || 0) * Number(item.UnitPrice || item.unitPrice || 0)
   }));
 
   const totalCost = items.reduce((sum, item) => sum + item.lineTotal, 0);
 
   return {
-    orderId: orderRow.OrderID,
-    date: orderRow.OrderDate,
-    paymentMethod: orderRow.PmtType,
+    orderId: orderRow.OrderID || orderRow.orderId,
+    date: orderRow.OrderDate || orderRow.date,
+    paymentMethod: orderRow.PmtType || orderRow.paymentMethod,
     itemCount: items.length,
     totalCost: Number(totalCost.toFixed(2)),
     items

@@ -106,16 +106,14 @@ function filterCategory(category) {
     // Dynamic Active Button Selection Toggles
     const buttons = document.querySelectorAll(".category-btn");
     buttons.forEach(btn => {
-        const text = btn.textContent.trim();
-        if(text === category || (category === "All" && text === "All Items")) {
-            btn.classList.remove("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
-            btn.classList.add("bg-indigo-600", "text-white", "shadow-xs");
+        const btnCategory = btn.getAttribute('data-category');
+        if(btnCategory === category) {
+            btn.classList.add("active");
         } else {
-            btn.classList.remove("bg-indigo-600", "text-white", "shadow-xs");
-            btn.classList.add("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
+            btn.classList.remove("active");
         }
-        
     });
+    
     renderMenu();
 }
 
@@ -166,11 +164,11 @@ function renderMenu() {
             <div class="menu-card-footer">
                 <span class="menu-card-price">$${item.price.toFixed(2)}</span>
                 <div class="menu-card-actions">
-                    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
+                    <button onclick="openItemDetailsPage(${JSON.stringify(item.id)})" class="menu-card-link">
                         View Details
                         <svg xmlns="http://www.w3.org/2000/svg" class="menu-card-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </button>
-                    <button onclick="addToCart(${item.id})" class="menu-card-button">
+                    <button onclick="addToCart(${JSON.stringify(item.id)})" class="menu-card-button">
                         Add to Cart
                     </button>
                 </div>
@@ -188,10 +186,11 @@ function updateCartButton() {
 }
 
 function addToCart(id) {
-    const item = menuItems.find(i => i.id === id);
+    const normalizedId = String(id);
+    const item = menuItems.find(i => String(i.id) === normalizedId);
     if (!item) return;
 
-    const existingItem = cartItems.find(cartItem => cartItem.id === id);
+    const existingItem = cartItems.find(cartItem => String(cartItem.id) === normalizedId);
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
@@ -282,7 +281,8 @@ window.addEventListener("storage", () => {
 
 // Routes to the dedicated full detailed item display page view
 function openItemDetailsPage(id) {
-    const item = menuItems.find(i => i.id === id);
+    const normalizedId = String(id);
+    const item = menuItems.find(i => String(i.id) === normalizedId);
     if (!item) return;
 
     // Inject matching row record dataset metrics straight onto UI views

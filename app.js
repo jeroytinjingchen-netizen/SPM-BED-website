@@ -24,6 +24,12 @@ app.use(express.urlencoded({ extended: true }));
 // e.g. visiting http://localhost:3000 loads Index.html automatically
 app.use(express.static("public"));
 
+// Debug request logging
+app.use((req, res, next) => {
+  console.log('REQ', req.method, req.originalUrl);
+  next();
+});
+
 // ==========================================
 // CART CONTROLLER
 // ==========================================
@@ -83,6 +89,14 @@ app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 app.delete("/stalls/:stallId/menu/:itemCode", menuItemController.deleteMenu);
 app.put("/stalls/:stallId/menu/:itemCode", menuItemController.updateMenu);
 app.put("/stalls/:stallId/menu/:itemCode/toggle", menuItemController.toggleMenu);
+
+app.get('/api/menu/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// Register menu routes for the public menu API
+app.use('/api/menu', menuRoutes);
+console.log('Mounted /api/menu routes:', menuRoutes.stack.filter(layer => layer.route).map(layer => Object.keys(layer.route.methods).join(',').toUpperCase() + ' ' + layer.route.path));
 
 // ==========================================
 // CUSTOMER ROUTES

@@ -302,15 +302,15 @@ function updateNavigationUI(isLoggedIn) {
 
     if (isLoggedIn) {
         menu.innerHTML = `
+            <li><a onclick="navigateTo('landing-view')">Home</a></li>
             <li><a href="Menu.html">Menu</a></li>
             <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
-            <li><a href="Menu.html">Menu</a></li>
-            <li><a onclick="handleLogout()" class="btn-primary">Log Out</a></li>
+            <li><a onclick="handleLogout()">Log Out</a></li>
         `;
     } else {
         menu.innerHTML = `
             <li><a onclick="navigateTo('landing-view')">Home</a></li>
-            <li><a href="Menu.html">Menu</a></li>
+            <li><a href="Menu.html" class="btn-primary">Menu</a></li>
             <li><a onclick="navigateTo('login-view')">Log In</a></li>
             <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
         `;
@@ -351,17 +351,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!restored) {
         updateNavigationUI(false);
         navigateTo('landing-view');
-// Check saved auth state on page load
-document.addEventListener("DOMContentLoaded", () => {
-    const savedAuth = localStorage.getItem('hawkerhub-auth');
-    if (savedAuth) {
-        try {
-            const parsed = JSON.parse(savedAuth);
-            authToken = parsed.token;
-            currentUser = parsed.customer;
-            updateNavigationUI(true);
-        } catch (e) {
-            console.error("Failed to restore session:", e);
-        }
     }
 });

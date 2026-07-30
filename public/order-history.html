@@ -8,13 +8,34 @@
     <link rel="stylesheet" href="Menu.css">
 </head>
 <body class="menu-page">
-    <nav class="navbar sticky-navbar">
-        <div class="container-sm">
-            <div class="navbar-brand">
-                <span class="brand-title" onclick="window.location.href='Menu.html'">SG Hawker Management</span>
+    <header>
+        <nav class="navbar">
+            <div class="navbar-brand-group">
+                <a href="Menu.html" class="btn-back-menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Menu
+                </a>
+                <a class="logo" href="Index.html">
+                    SG Hawker Management
+                </a>
             </div>
-        </div>
-    </nav>
+            
+            <ul class="nav-links" id="nav-menu">
+                <li>
+                    <a href="cart.html" class="btn-cart">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
+                            <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+                            <circle cx="18" cy="20" r="1.5" fill="currentColor" />
+                        </svg>
+                        Cart <span id="cart-count" class="cart-badge">0</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
 
     <div class="page-view menu-page-view">
         <section class="menu-panel">
