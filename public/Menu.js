@@ -118,12 +118,19 @@ document.addEventListener("DOMContentLoaded", () => {
 // BACKEND API SERVICES (Member 2 - Zhen Yu)
 // ==========================================
 
-// 1. Core Fetch All Menu Items
+// 1. Core Fetch All Menu Items (Guarded Against HTML 404 Pages)
 async function fetchMenuItemsFromBackend() {
     try {
         const response = await fetch('/api/menu/search'); 
         if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            console.warn(`Menu API status: ${response.status}`);
+            return;
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.warn("API response was not JSON.");
+            return;
         }
         
         const data = await response.json();
@@ -131,10 +138,6 @@ async function fetchMenuItemsFromBackend() {
         renderMenu(); 
     } catch (error) {
         console.error("Error fetching menu items from database:", error);
-        const itemCountEl = document.getElementById("item-count");
-        if (itemCountEl) {
-            itemCountEl.textContent = "Error loading menu from database.";
-        }
     }
 }
 
@@ -167,11 +170,9 @@ async function filterCategory(category) {
     buttons.forEach(btn => {
         const text = btn.textContent.trim();
         if (text === category || (category === "All" && text === "All Items")) {
-            btn.classList.remove("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
-            btn.classList.add("bg-indigo-600", "text-white", "shadow-xs");
+            btn.classList.add("active");
         } else {
-            btn.classList.remove("bg-indigo-600", "text-white", "shadow-xs");
-            btn.classList.add("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
+            btn.classList.remove("active");
         }
     });
 
@@ -211,8 +212,6 @@ async function fetchPopularItems() {
 // MEMBER 4 INTEGRATION: FAVOURITES & LIKES
 // ==========================================
 async function toggleMenuLike(itemId, button) {
-    console.log("Heart clicked. Item ID:", itemId);
-
     const item = menuItems.find(menuItem => (menuItem.ItemCode || menuItem.id || menuItem.itemCode) === itemId);
 
     if (!item) {
@@ -220,14 +219,14 @@ async function toggleMenuLike(itemId, button) {
         return;
     }
 
-    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
+    const authDataStr = localStorage.getItem("hawkerhub-auth");
+    if (!authDataStr) {
+        alert("Please log in first.");
+        return;
+    }
 
-    if (
-        !authData ||
-        !authData.customer ||
-        !authData.customer.customerId ||
-        !authData.token
-    ) {
+    const authData = JSON.parse(authDataStr);
+    if (!authData || !authData.customer || !authData.customer.customerId) {
         alert("Please log in first.");
         return;
     }
@@ -245,16 +244,16 @@ async function toggleMenuLike(itemId, button) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${authData.token}`
+                "Authorization": `Bearer ${authData.token || ""}`
             },
             body: JSON.stringify(requestBody)
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.message || "Unable to update favourite.");
+            throw new Error("Unable to update favourite.");
         }
+
+        const data = await response.json();
 
         if (button) {
             if (data.liked === true) {
@@ -270,21 +269,25 @@ async function toggleMenuLike(itemId, button) {
 
     } catch (error) {
         console.error("Like request failed:", error);
-        alert(error.message);
     } finally {
         if (button) button.disabled = false;
     }
 }
 
 async function loadFavouriteCount() {
-    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
-    if (!authData || !authData.customer) return;
-
-    const customerID = authData.customer.customerId;
+    const authDataStr = localStorage.getItem("hawkerhub-auth");
+    if (!authDataStr) return;
 
     try {
+        const authData = JSON.parse(authDataStr);
+        if (!authData || !authData.customer || !authData.customer.customerId) return;
+
+        const customerID = authData.customer.customerId;
         const response = await fetch(`/api/likes/${customerID}`);
         if (!response.ok) return;
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) return;
 
         const data = await response.json();
         const favEl = document.getElementById("favourite-count");
