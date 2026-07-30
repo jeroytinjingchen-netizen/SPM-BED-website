@@ -9,12 +9,17 @@ let cartItems = [];
 let cartCount = 0;
 
 // ==========================================
-// Cart Local Storage Engine
+// Cart Local Storage & State Engine
 // ==========================================
 function loadCart() {
     const savedCart = localStorage.getItem("hawkerhub-cart");
     if (savedCart) {
-        cartItems = JSON.parse(savedCart);
+        try {
+            cartItems = JSON.parse(savedCart);
+        } catch (e) {
+            console.error("Failed to parse cart data:", e);
+            cartItems = [];
+        }
     }
     cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 }
@@ -23,6 +28,7 @@ function saveCart() {
     localStorage.setItem("hawkerhub-cart", JSON.stringify(cartItems));
     cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     updateCartButton();
+    renderCartPage();
 }
 
 function updateCartButton() {
@@ -33,11 +39,11 @@ function updateCartButton() {
 }
 
 function addToCart(id) {
-    const item = menuItems.find(i => (i.ItemCode || i.id) === id);
+    const item = menuItems.find(i => (i.ItemCode || i.id || i.itemCode) === id);
     if (!item) return;
 
-    const itemId = item.ItemCode || item.id;
-    const itemName = item.ItemDesc || item.name;
+    const itemId = item.ItemCode || item.id || item.itemCode;
+    const itemName = item.ItemDesc || item.name || "Menu Item";
     const itemPrice = parseFloat(item.ItemPrice || item.price || 0);
 
     const existingItem = cartItems.find(cartItem => cartItem.id === itemId);
@@ -57,17 +63,48 @@ function addToCart(id) {
     alert(`${itemName} has been added to your cart.`);
 }
 
+function renderCartPage() {
+    const cartContainer = document.getElementById("cart-items-container");
+    if (!cartContainer) return;
+
+    if (cartItems.length === 0) {
+        cartContainer.innerHTML = `<p class="text-gray-500">Your cart is currently empty.</p>`;
+        return;
+    }
+
+    cartContainer.innerHTML = cartItems.map(item => `
+        <div class="cart-item-row flex justify-between items-center py-2 border-b">
+            <div>
+                <h4 class="font-bold">${item.name}</h4>
+                <p class="text-sm text-gray-500">$${item.price.toFixed(2)} x ${item.quantity}</p>
+            </div>
+            <span class="font-semibold">$${(item.price * item.quantity).toFixed(2)}</span>
+        </div>
+    `).join('');
+}
+
 // ==========================================
-// Initialization Lifecycle Hook
+// Initialization DOM Lifecycle Hooks
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     loadCart();
     updateCartButton();
+    renderCartPage();
+    loadFavouriteCount();
 
-    // Initial Database Fetch from Backend API
+    // Initial Database Fetch Phase
     fetchMenuItemsFromBackend();
 
-    // Wire Real-time Search Input Field
+    // Wire Clear Cart Event
+    const clearCartButton = document.getElementById("clear-cart");
+    if (clearCartButton) {
+        clearCartButton.addEventListener("click", () => {
+            cartItems = [];
+            saveCart();
+        });
+    }
+
+    // Wire Real-time Search Input
     const searchInput = document.getElementById("search-input");
     if (searchInput) {
         searchInput.addEventListener("input", (e) => {
@@ -78,13 +115,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// BACKEND API CONNECTIONS (Zhen Yu - Member 2)
+// BACKEND API SERVICES (Member 2 - Zhen Yu)
 // ==========================================
 
 // 1. Core Fetch All Menu Items
 async function fetchMenuItemsFromBackend() {
     try {
-        const response = await fetch('/api/menu/search');
+        const response = await fetch('/api/menu/search'); 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -126,14 +163,15 @@ async function filterByStall(stallId) {
 async function filterCategory(category) {
     currentCategory = category;
 
-    // Active Category Button State Toggle
     const buttons = document.querySelectorAll(".category-btn");
     buttons.forEach(btn => {
         const text = btn.textContent.trim();
         if (text === category || (category === "All" && text === "All Items")) {
-            btn.classList.add("active");
+            btn.classList.remove("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
+            btn.classList.add("bg-indigo-600", "text-white", "shadow-xs");
         } else {
-            btn.classList.remove("active");
+            btn.classList.remove("bg-indigo-600", "text-white", "shadow-xs");
+            btn.classList.add("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
         }
     });
 
@@ -149,7 +187,7 @@ async function filterCategory(category) {
     }
 }
 
-// 4. FEATURE 3: Retrieve Top 5 Popular / Top-Selling Items
+// 4. FEATURE 3: Retrieve Top 5 Popular / Top-Selling Dishes
 async function fetchPopularItems() {
     try {
         const response = await fetch('/api/menu/popular');
@@ -170,6 +208,95 @@ async function fetchPopularItems() {
 }
 
 // ==========================================
+// MEMBER 4 INTEGRATION: FAVOURITES & LIKES
+// ==========================================
+async function toggleMenuLike(itemId, button) {
+    console.log("Heart clicked. Item ID:", itemId);
+
+    const item = menuItems.find(menuItem => (menuItem.ItemCode || menuItem.id || menuItem.itemCode) === itemId);
+
+    if (!item) {
+        alert("Menu item not found.");
+        return;
+    }
+
+    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
+
+    if (
+        !authData ||
+        !authData.customer ||
+        !authData.customer.customerId ||
+        !authData.token
+    ) {
+        alert("Please log in first.");
+        return;
+    }
+
+    if (button) button.disabled = true;
+
+    try {
+        const requestBody = {
+            customerID: authData.customer.customerId,
+            stallID: item.StallID || item.stallID,
+            itemCode: item.ItemCode || item.itemCode || itemId
+        };
+
+        const response = await fetch("/api/likes/toggle", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${authData.token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Unable to update favourite.");
+        }
+
+        if (button) {
+            if (data.liked === true) {
+                button.textContent = "❤️";
+                button.classList.add("liked");
+            } else {
+                button.textContent = "♡";
+                button.classList.remove("liked");
+            }
+        }
+
+        await loadFavouriteCount();
+
+    } catch (error) {
+        console.error("Like request failed:", error);
+        alert(error.message);
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function loadFavouriteCount() {
+    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
+    if (!authData || !authData.customer) return;
+
+    const customerID = authData.customer.customerId;
+
+    try {
+        const response = await fetch(`/api/likes/${customerID}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const favEl = document.getElementById("favourite-count");
+        if (favEl) {
+            favEl.textContent = data.totalLikes || data.likesCount || 0;
+        }
+    } catch (err) {
+        console.error("Unable to load favourite count:", err);
+    }
+}
+
+// ==========================================
 // View Engine & Navigation Router
 // ==========================================
 function navigateTo(viewId) {
@@ -185,20 +312,36 @@ function navigateTo(viewId) {
     window.scrollTo({ top: 0 });
 }
 
-function openItemDetailsPage(itemId) {
-    const item = menuItems.find(i => (i.ItemCode || i.id) === itemId);
+function openItemDetailsPage(id) {
+    const item = menuItems.find(i => (i.ItemCode || i.id || i.itemCode) === id);
     if (!item) return;
 
-    const itemName = item.ItemDesc || item.name;
-    const itemCategory = item.ItemCategory || item.category || "Main";
-    const itemPrice = parseFloat(item.ItemPrice || item.price || 0).toFixed(2);
-    const stallId = item.StallID || "General";
+    const itemName = item.ItemDesc || item.name || "Unnamed Item";
+    const itemCategory = item.ItemCategory || item.category || "General";
+    const itemDesc = item.ItemDesc || item.description || "Freshly prepared daily.";
+    const itemPrice = parseFloat(item.ItemPrice || item.price || 0);
+    const isAvailable = item.available !== undefined ? item.available : true;
 
-    document.getElementById("detail-page-title").textContent = itemName;
-    document.getElementById("detail-page-badge").textContent = itemCategory;
-    document.getElementById("detail-page-description").textContent = `Stall Code: ${stallId}. Prepared fresh daily.`;
-    document.getElementById("detail-page-price").textContent = `$${itemPrice}`;
-    document.getElementById("detail-page-status").textContent = `Stall: ${stallId}`;
+    const titleEl = document.getElementById("detail-page-title");
+    const badgeEl = document.getElementById("detail-page-badge");
+    const descEl = document.getElementById("detail-page-description");
+    const priceEl = document.getElementById("detail-page-price");
+    const statusEl = document.getElementById("detail-page-status");
+
+    if (titleEl) titleEl.textContent = itemName;
+    if (badgeEl) badgeEl.textContent = itemCategory;
+    if (descEl) descEl.textContent = itemDesc;
+    if (priceEl) priceEl.textContent = `$${itemPrice.toFixed(2)}`;
+    
+    if (statusEl) {
+        if (isAvailable) {
+            statusEl.textContent = "In Stock / Available";
+            statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+        } else {
+            statusEl.textContent = "Out of Stock / Unavailable";
+            statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800";
+        }
+    }
 
     navigateTo('details-view');
 }
@@ -209,16 +352,19 @@ function openItemDetailsPage(itemId) {
 function renderMenu() {
     const grid = document.getElementById("menu-grid");
     const emptyState = document.getElementById("empty-state");
-    const itemCountEl = document.getElementById("item-count");
     if (!grid || !emptyState) return;
 
-    // Filter using local search query matching
     const filtered = menuItems.filter(item => {
         const name = (item.ItemDesc || item.name || "").toLowerCase();
         const category = (item.ItemCategory || item.category || "").toLowerCase();
-        return name.includes(searchQuery) || category.includes(searchQuery);
+        
+        const matchesCategory = currentCategory === "All" || category === currentCategory.toLowerCase();
+        const matchesSearch = name.includes(searchQuery) || category.includes(searchQuery);
+
+        return matchesCategory && matchesSearch;
     });
 
+    const itemCountEl = document.getElementById("item-count");
     if (itemCountEl && !itemCountEl.textContent.includes("Top")) {
         itemCountEl.textContent = `Showing ${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
     }
@@ -237,16 +383,20 @@ function renderMenu() {
         const card = document.createElement("div");
         card.className = "menu-card";
 
-        const itemId = item.ItemCode || item.id;
-        const itemName = item.ItemDesc || item.name || "Dish Item";
+        const itemId = item.ItemCode || item.id || item.itemCode;
+        const itemName = item.ItemDesc || item.name || "Unnamed Dish";
         const itemCategory = item.ItemCategory || item.category || "Mains";
         const itemPrice = parseFloat(item.ItemPrice || item.price || 0).toFixed(2);
+        const isAvailable = item.available !== undefined ? item.available : true;
         const totalLikes = item.TotalLikes !== undefined ? `❤️ ${item.TotalLikes} Likes` : '';
 
         card.innerHTML = `
             <div class="menu-card-body">
                 <div class="menu-card-meta">
                     <span class="menu-card-category">${itemCategory}</span>
+                    <span class="menu-card-status ${isAvailable ? 'available' : 'out-of-stock'}">
+                        ${isAvailable ? 'In Stock' : 'Out of Stock'}
+                    </span>
                     ${totalLikes ? `<span class="popular-badge" style="background:#fef2f2; color:#ef4444; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">${totalLikes}</span>` : ''}
                 </div>
                 <h3 class="menu-card-title">${itemName}</h3>
@@ -254,6 +404,9 @@ function renderMenu() {
             <div class="menu-card-footer">
                 <span class="menu-card-price">$${itemPrice}</span>
                 <div class="menu-card-actions">
+                    <button class="menu-like-button" onclick="toggleMenuLike('${itemId}', this)">
+                        ♡
+                    </button>
                     <button onclick="openItemDetailsPage('${itemId}')" class="menu-card-link">
                         View Details
                     </button>
@@ -267,7 +420,7 @@ function renderMenu() {
     });
 }
 
-// Sync across browser tabs
+// Sync cart count across tabs
 window.addEventListener("storage", () => {
     loadCart();
     updateCartButton();
