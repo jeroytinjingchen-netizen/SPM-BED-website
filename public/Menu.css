@@ -469,3 +469,34 @@ body.menu-page {
 .menu-page .shadow-xs {
     box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
 }
+
+/* Like button */
+
+.like-button {
+    width: 42px;
+    height: 42px;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    background: white;
+    color: #9ca3af;
+    font-size: 25px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.like-button:hover {
+    transform: scale(1.08);
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+.like-button.liked {
+    color: #ef4444;
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+.like-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

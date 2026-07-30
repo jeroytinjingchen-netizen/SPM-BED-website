@@ -95,6 +95,13 @@ app.get("/api/likes/:customerID", likeController.getCustomerLikes);
 
 
 
+// ==========================================
+// youliang FEEDBACK ROUTES - youliang
+// ==========================================
+app.post("/api/likes", verifyToken, likeController.createLike);
+app.post("/api/likes/toggle", verifyToken, likeController.toggleLike);
+app.get("/api/likes/:customerID", verifyToken, likeController.getCustomerLikes);
+app.delete("/api/likes/:customerID/:stallID/:itemCode", verifyToken, likeController.deleteLike);
 
 // ==========================================
 // START SERVER AND TEST CONNECTION

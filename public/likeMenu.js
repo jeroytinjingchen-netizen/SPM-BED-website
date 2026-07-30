@@ -38,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderMenu();
     updateCartButton();
     renderCartPage();
-    loadFavouriteCount();
 
     const clearCartButton = document.getElementById("clear-cart");
     if (clearCartButton) {
@@ -82,48 +81,6 @@ async function fetchMenuItemsFromBackend() {
             itemCountEl.textContent = "Error loading menu from database.";
         }
     }
-    async function toggleMenuLike(itemId, button) {
-
-    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
-
-    if (!authData) {
-        alert("Please login first.");
-        return;
-    }
-
-    const customerID = authData.customer.customerId;
-    const token = authData.token;
-
-    const item = menuItems.find(i => i.id === itemId);
-
-    try {
-
-        const response = await fetch("/api/likes/toggle", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                customerID: customerID,
-                stallID: item.stallID,
-                itemCode: item.itemCode
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            alert(data.message);
-            return;
-        }
-
-
-    } catch (err) {
-        console.error(err);
-        alert("Unable to update favourite.");
-    }
-}
 }
 // Navigation View Engine (Handles opening standard standalone page views)
 function navigateTo(viewId) {
@@ -160,7 +117,6 @@ function filterCategory(category) {
         
     });
     renderMenu();
-
 }
 
 // Core Array Filtering & Dynamic Card Injection
@@ -210,41 +166,19 @@ function renderMenu() {
             <div class="menu-card-footer">
                 <span class="menu-card-price">$${item.price.toFixed(2)}</span>
                 <div class="menu-card-actions">
-                   <div class="menu-card-actions">
-
-    <button
-        class="menu-like-button"
-        onclick="toggleLike(this)"">
-        ♡
-    </button>
-
-    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
-        View Details
-        <svg xmlns="http://www.w3.org/2000/svg" class="menu-card-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-    </button>
-
-    <button onclick="addToCart(${item.id})" class="menu-card-button">
-        Add to Cart
-    </button>
-
-</div>
+                    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
+                        View Details
+                        <svg xmlns="http://www.w3.org/2000/svg" class="menu-card-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    <button onclick="addToCart(${item.id})" class="menu-card-button">
+                        Add to Cart
+                    </button>
                 </div>
             </div>
         `;
         grid.appendChild(card);
     });
 }
-
-function toggleLike(button) {
-    if (button.innerHTML === "♡") {
-        button.innerHTML = "❤️";
-    } else {
-        button.innerHTML = "♡";
-    }
-}
-
 
 function updateCartButton() {
     const cartCountEl = document.getElementById("cart-count");
@@ -365,100 +299,8 @@ function openItemDetailsPage(id) {
         statusEl.textContent = "Out of Stock / Unavailable";
         statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800";
     }
+    
 
-    async function toggleMenuLike(itemId, button) {
-    console.log("Heart clicked. Item ID:", itemId);
-
-    const item = menuItems.find(menuItem => menuItem.id === itemId);
-
-    console.log("Menu item found:", item);
-
-    if (!item) {
-        alert("Menu item not found.");
-        return;
-    }
-
-    const authData = JSON.parse(
-        localStorage.getItem("hawkerhub-auth")
-    );
-
-    console.log("Login data:", authData);
-
-    if (
-        !authData ||
-        !authData.customer ||
-        !authData.customer.customerId ||
-        !authData.token
-    ) {
-        alert("Please log in first.");
-        return;
-    }
-
-    button.disabled = true;
-
-    try {
-        const requestBody = {
-            customerID: authData.customer.customerId,
-            stallID: item.stallID,
-            itemCode: item.itemCode
-        };
-
-        console.log("Sending like request:", requestBody);
-
-        const response = await fetch("/api/likes/toggle", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${authData.token}`
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        const data = await response.json();
-
-        console.log("Like response status:", response.status);
-        console.log("Like response data:", data);
-
-        if (!response.ok) {
-            throw new Error(
-                data.message || "Unable to update favourite."
-            );
-        }
-
-        if (data.liked === true) {
-            button.textContent = "❤️";
-            button.classList.add("liked");
-        } else {
-            button.textContent = "♡";
-            button.classList.remove("liked");
-        }
-
-    } catch (error) {
-        console.error("Like request failed:", error);
-        alert(error.message);
-    } finally {
-        button.disabled = false;
-    }
-}
-    async function loadFavouriteCount() {
-
-    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
-
-    if (!authData) return;
-
-    const customerID = authData.customer.customerId;
-
-    try {
-
-        const response = await fetch(`/api/likes/${customerID}`);
-
-        const data = await response.json();
-
-        document.getElementById("favourite-count").textContent = data.totalLikes;
-
-    } catch (err) {
-        console.error("Unable to load favourite count:", err);
-    }
-}
-
+    // Call transition routing switch
+    navigateTo('details-view');
 }
