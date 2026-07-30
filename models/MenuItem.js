@@ -13,17 +13,18 @@ class MenuItem {
     }
 
     // POST: Add a new menu item
-    static async addMenuItem(stallId, itemCode, itemDesc, itemPrice, itemCategory) {
+    static async addMenuItem(stallId, itemCode, itemDesc, itemPrice, itemCategory, isSpecial) {
         const request = new sql.Request();
         request.input("StallID", sql.Char(10), stallId);
         request.input("ItemCode", sql.VarChar(20), itemCode);
         request.input("ItemDesc", sql.VarChar(100), itemDesc);
         request.input("ItemPrice", sql.Decimal(6, 2), itemPrice);
         request.input("ItemCategory", sql.VarChar(30), itemCategory);
+        request.input("IsSpecial", sql.Bit, isSpecial);
 
         const result = await request.query(`
-            INSERT INTO MenuItem (StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory)
-            VALUES (@StallID, @ItemCode, @ItemDesc, @ItemPrice, @ItemCategory)
+            INSERT INTO MenuItem (StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory, IsSpecial)
+            VALUES (@StallID, @ItemCode, @ItemDesc, @ItemPrice, @ItemCategory, @IsSpecial)
         `);
         return result;
     }
@@ -42,13 +43,11 @@ class MenuItem {
             WHERE StallID = @StallID AND ItemCode = @ItemCode
         `);
         
-        // rowsAffected[0] tells us how many rows were actually deleted.
-        // If it is greater than 0, it means the item was found and deleted successfully.
         return result.rowsAffected[0] > 0; 
     }
 
     // PUT: Update an existing menu item
-    static async updateMenuItem(stallId, itemCode, itemDesc, itemPrice, itemCategory) {
+    static async updateMenuItem(stallId, itemCode, itemDesc, itemPrice, itemCategory, isSpecial) {
         const request = new sql.Request();
         
         request.input("StallID", sql.Char(10), stallId);
@@ -56,14 +55,35 @@ class MenuItem {
         request.input("ItemDesc", sql.VarChar(100), itemDesc);
         request.input("ItemPrice", sql.Decimal(6, 2), itemPrice);
         request.input("ItemCategory", sql.VarChar(30), itemCategory);
+        request.input("IsSpecial", sql.Bit, isSpecial);
 
         const result = await request.query(`
             UPDATE MenuItem 
-            SET ItemDesc = @ItemDesc, ItemPrice = @ItemPrice, ItemCategory = @ItemCategory
+            SET ItemDesc = @ItemDesc, ItemPrice = @ItemPrice, ItemCategory = @ItemCategory, IsSpecial = @IsSpecial
             WHERE StallID = @StallID AND ItemCode = @ItemCode
         `);
         
         return result.rowsAffected[0] > 0; 
+    }
+
+    // PUT: Toggle IsAvailable status for Feature 2
+    static async toggleMenuItem(stallId, itemCode) {
+        const request = new sql.Request();
+        request.input("StallID", sql.Char(10), stallId);
+        request.input("ItemCode", sql.VarChar(20), itemCode);
+
+        // Fetch current status
+        const check = await request.query(`SELECT IsAvailable FROM MenuItem WHERE StallID = @StallID AND ItemCode = @ItemCode`);
+        if (check.recordset.length === 0) return false;
+
+        // Determine new status (handles NULL if SQL command wasn't run yet)
+        const currentStatus = check.recordset[0].IsAvailable === null ? 1 : check.recordset[0].IsAvailable;
+        const newStatus = currentStatus ? 0 : 1;
+
+        request.input("NewStatus", sql.Bit, newStatus);
+        const result = await request.query(`UPDATE MenuItem SET IsAvailable = @NewStatus WHERE StallID = @StallID AND ItemCode = @ItemCode`);
+        
+        return result.rowsAffected[0] > 0;
     }
 }
 
