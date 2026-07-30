@@ -152,4 +152,39 @@ module.exports = {
   updateCartItem,
   removeCartItem,
   clearCart,
+  checkout,
 };
+
+// Checkout: create order from cart and clear it
+async function checkout(req, res) {
+  try {
+    console.log('Checkout request body:', JSON.stringify(req.body));
+    const { cartId, pmtType } = req.body;
+    const customerId = req.customer.customerId;
+    if (!cartId) return res.status(400).json({ error: 'cartId is required' });
+
+    const cart = await Cart.getCartByIdAndCustomer(cartId, customerId);
+    if (!cart) return res.status(404).json({ error: 'Cart not found for this customer' });
+
+    const cartItems = await Cart.getCartItems(cartId);
+    const orderModel = require('../models/orderModel');
+    let result;
+
+    if (cartItems && cartItems.length > 0) {
+      result = await orderModel.createOrderFromCart(cartId, customerId, pmtType || 'Cash');
+    } else {
+      const payloadItems = Array.isArray(req.body.items) ? req.body.items : [];
+      console.log('Backend checkout payloadItems:', payloadItems, 'isArray:', Array.isArray(req.body.items));
+      if (payloadItems.length === 0) {
+        return res.status(400).json({ error: 'Cart is empty. Add items before checkout.' });
+      }
+      result = await orderModel.createOrderFromPayload(cartId, customerId, pmtType || 'Cash', payloadItems);
+    }
+
+    // Clear client-side cart behavior is handled by frontend; server returns success
+    res.json({ success: true, orderId: result.orderId, items: result.itemsCount });
+  } catch (error) {
+    console.error('Controller checkout error:', error);
+    res.status(500).json({ error: 'Error during checkout' });
+  }
+}

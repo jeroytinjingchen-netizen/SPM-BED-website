@@ -7,6 +7,7 @@ const cartController = require("./controllers/cartController");
 const menuController = require("./controllers/menuController");
 const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
+const orderHistoryController = require("./controllers/orderHistoryController");
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
 const { registerCustomer, loginCustomer, getCustomerById, updateCustomerProfile, deleteCustomerProfile } = require("./controllers/customerController");
@@ -31,6 +32,7 @@ app.post('/api/cart/add', verifyToken, cartController.validateCart, cartControll
 app.post('/api/cart/update', verifyToken, cartController.updateCartItem);
 app.post('/api/cart/remove', verifyToken, cartController.removeCartItem);
 app.post('/api/cart/clear', verifyToken, cartController.clearCart);
+app.post('/api/cart/checkout', verifyToken, cartController.checkout);
 
 // ==========================================
 // TEST ROUTE TO PROVE DATABASE CONNECTION
@@ -69,7 +71,7 @@ app.post("/api/customers/login", validateLogin, loginCustomer);
 app.get("/api/customers/:id", verifyToken, getCustomerById);
 app.put("/api/customers/:id", verifyToken, updateCustomerProfile);
 app.delete("/api/customers/:id", verifyToken, deleteCustomerProfile);
-
+app.get("/api/customers/:id/orders", verifyToken, orderHistoryController.getCustomerOrderHistory);
 
 // ==========================================
 // youliang FEEDBACK ROUTES - youliang

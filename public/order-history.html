@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HawkerHub - Order History</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="Menu.css">
+</head>
+<body class="menu-page">
+    <nav class="navbar sticky-navbar">
+        <div class="container-sm">
+            <div class="navbar-brand">
+                <span class="brand-title" onclick="window.location.href='Menu.html'">SG Hawker Management</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-view menu-page-view">
+        <section class="menu-panel">
+            <div class="catalog-header">
+                <div>
+                    <h1 class="catalog-title">Order History</h1>
+                    <p class="text-gray-500">Review your past orders, items, and totals.</p>
+                </div>
+                <a href="Menu.html" class="menu-card-button" style="text-decoration:none; display:inline-flex; align-items:center;">Back to Menu</a>
+            </div>
+
+            <div id="history-loading" class="empty-state-box" style="display:block;">
+                <h3>Loading your order history...</h3>
+                <p>Please wait while we fetch your recent orders from the database.</p>
+            </div>
+
+            <div id="history-empty" class="empty-state-box hidden">
+                <h3>No orders found</h3>
+                <p>You have not placed any orders yet. Once you do, they will appear here.</p>
+            </div>
+
+            <div id="history-list" class="menu-grid" style="margin-top:1rem;"></div>
+        </section>
+    </div>
+
+    <script src="order-history.js"></script>
+</body>
+</html>

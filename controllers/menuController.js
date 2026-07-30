@@ -24,10 +24,15 @@ exports.searchMenu = async (req, res, next) => {
 
   try {
     const pool = await sql.connect(dbConfig);
-    const result = await pool.request()
-      .input('SearchQuery', sql.VarChar, `%${q}%`)
-      .query('SELECT * FROM MenuItems WHERE item_name LIKE @SearchQuery OR description LIKE @SearchQuery');
+    const request = pool.request();
+    let sqlQuery = 'SELECT * FROM MenuItem';
 
+    if (q && q.trim() !== '') {
+      request.input('SearchQuery', sql.VarChar, `%${q}%`);
+      sqlQuery += ' WHERE ItemDesc LIKE @SearchQuery OR ItemCategory LIKE @SearchQuery OR ItemCode LIKE @SearchQuery';
+    }
+
+    const result = await request.query(sqlQuery);
     res.status(200).json(result.recordset);
   } catch (err) {
     next(err);
