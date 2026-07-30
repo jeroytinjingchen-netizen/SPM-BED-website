@@ -4,119 +4,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HawkerHub - Menu Management</title>
+    <title>HawkerHub - Menu Catalog</title>
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="Menu.css">
-
 </head>
 
 <body class="menu-page">
 
+    <!-- Navigation Bar -->
     <nav class="navbar sticky-navbar">
         <div class="container-sm">
             <div class="navbar-brand">
-                <span class="brand-title" onclick="navigateTo('menu-view')">SG Hawker Management</span>
+                <a href="Index.html" class="brand-title">SG Hawker Management</a>
             </div>
         </div>
     </nav>
-    <a id="favourite-button" href="favourites.html" class="menu-action-button favourite-button">
-        <span class="menu-action-icon">❤️</span>
-        <span class="menu-action-text">Favourites</span>
-        <span id="favourite-count" class="menu-action-count">0</span>
-    </a>
-    <a id="cart-button" href="cart.html" class="menu-action-button cart-button">
-        <svg xmlns="http://www.w3.org/2000/svg" class="menu-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
-            <circle cx="9" cy="20" r="1.5" fill="currentColor" />
-            <circle cx="18" cy="20" r="1.5" fill="currentColor" />
-        </svg>
-        <span class="menu-action-text">Cart</span>
-        <span id="cart-count" class="menu-action-count">0</span>
-    </a>
 
+    <!-- TOP RIGHT ACTION BUTTONS (Member 4 Favourites + Member 3 Cart) -->
+    <div class="menu-action-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; display: flex; gap: 0.5rem; align-items: center;">
+        
+        <!-- Member 4: Favourites Button -->
+        <a id="favourite-button" href="favourites.html" class="menu-action-button favourite-button">
+            <span class="menu-action-icon">❤️</span>
+            <span class="menu-action-text">Favourites</span>
+            <span id="favourite-count" class="menu-action-count">0</span>
+        </a>
+
+        <!-- Member 3: Shopping Cart Button -->
+        <a id="cart-button" href="cart.html" class="menu-action-button cart-button">
+            <svg xmlns="http://www.w3.org/2000/svg" class="menu-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:1.25rem; height:1.25rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
+                <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+                <circle cx="18" cy="20" r="1.5" fill="currentColor" />
+            </svg>
+            <span class="menu-action-text">Cart</span>
+            <span id="cart-count" class="menu-action-count">0</span>
+        </a>
+
+    </div>
+
+    <!-- MAIN MENU CATALOG VIEW -->
     <div id="menu-view" class="page-view menu-page-view">
 
         <section class="menu-panel">
             <div class="menu-panel-header">
+                
+                <!-- Keyword Search Input -->
                 <div class="menu-search-wrapper">
                     <label for="search-input" class="sr-only">Search menu items</label>
-                    <input type="text" id="search-input" placeholder="Search items by name or description..."
-                        class="menu-search-input">
+                    <input type="text" id="search-input" placeholder="Search items by name or category..." class="menu-search-input">
                     <div class="search-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
                 </div>
-                <div class="category-filter-row" id="category-filters">
-                    <button onclick="filterCategory('All')" class="category-btn active">All Items</button>
-                    <button onclick="filterCategory('Mains')" class="category-btn">Mains</button>
-                    <button onclick="filterCategory('Sides')" class="category-btn">Sides</button>
-                    <button onclick="filterCategory('Beverages')" class="category-btn">Beverages</button>
+
+                <!-- NEW FEATURE 1 (Zhen Yu): Hawker Stall Selection Filter -->
+                <div class="stall-filter-wrapper" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <label for="stall-select" style="font-size: 0.9rem; font-weight: 600; color: #374151;">
+                        Filter by Stall:
+                    </label>
+                    <select id="stall-select" onchange="filterByStall(this.value)" style="padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: 1px solid #d1d5db; background-color: white;">
+                        <option value="ALL">All Hawker Stalls</option>
+                        <option value="STL0000001">Ali Nasi Lemak (#01-01)</option>
+                        <option value="STL0000002">Ben Chicken Rice (#01-02)</option>
+                        <option value="STL0000003">Chloe Western (#02-01)</option>
+                        <option value="STL0000004">Aisha Briyani (#02-02)</option>
+                        <option value="STL0000005">Daniel Ramen (#03-01)</option>
+                        <option value="STL0000006">Farah Desserts (#03-02)</option>
+                    </select>
                 </div>
+
+                <!-- NEW FEATURE 2 (Zhen Yu): Category Filter Buttons -->
+                <div class="category-filter-row" id="category-filters" style="margin-top: 1rem;">
+                    <button onclick="filterCategory('All')" class="category-btn active">All Items</button>
+                    <button onclick="filterCategory('Main')" class="category-btn">Mains</button>
+                    <button onclick="filterCategory('Snack')" class="category-btn">Sides / Snacks</button>
+                    <button onclick="filterCategory('Drink')" class="category-btn">Beverages</button>
+                    <button onclick="filterCategory('Dessert')" class="category-btn">Desserts</button>
+                </div>
+
+                <!-- NEW FEATURE 3 (Zhen Yu): Retrieve Popular / Top-Selling Dishes -->
+                <div style="margin-top: 1rem; text-align: right;">
+                    <button id="popular-btn" onclick="fetchPopularItems()" class="btn-primary" style="padding: 0.5rem 1rem; border-radius: 0.375rem; border: none; font-weight: 600; cursor: pointer;">
+                        🔥 View Top 5 Popular Dishes
+                    </button>
+                </div>
+
             </div>
         </section>
 
         <section>
-            <div class="catalog-header">
+            <div class="catalog-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2 class="catalog-title">Menu Catalog</h2>
                 <span id="item-count" class="catalog-count">Showing 0 items</span>
             </div>
 
+            <!-- Grid Container for Dynamic Menu Items -->
             <div id="menu-grid" class="menu-grid"></div>
 
-            <div id="empty-state"
-                class="hidden empty-state-box">
-                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <!-- Empty State Display -->
+            <div id="empty-state" class="hidden empty-state-box">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 class="mt-4 text-sm font-semibold text-gray-900">No menu items found</h3>
-                <p class="mt-1 text-sm text-gray-500">Try adjusting your search query or selected category.</p>
+                <p class="mt-1 text-sm text-gray-500">Try adjusting your search query, stall selection, or selected category.</p>
             </div>
         </section>
     </div>
 
+    <!-- ITEM DETAIL MODAL / PAGE VIEW -->
     <div id="details-view" class="page-view hidden max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <button onclick="navigateTo('menu-view')"
-            class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors group">
-            <svg xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
+        <button onclick="navigateTo('menu-view')" class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Menu Catalog
         </button>
 
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div
-                class="h-48 bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white p-6 relative">
+            <div class="h-48 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white p-6 relative">
                 <div class="text-center">
-                    <span id="detail-page-badge"
-                        class="px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-full bg-white/20 text-white mb-2 inline-block">Category</span>
+                    <span id="detail-page-badge" class="px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-full bg-white/20 text-white mb-2 inline-block">Category</span>
                     <h1 id="detail-page-title" class="text-3xl font-extrabold tracking-tight">Item Name</h1>
                 </div>
             </div>
             <div class="p-8 space-y-6">
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Item Description</h3>
-                    <p id="detail-page-description" class="text-gray-600 text-base leading-relaxed">Detailed
-                        specification metrics go here.</p>
+                    <p id="detail-page-description" class="text-gray-600 text-base leading-relaxed">Detailed specification metrics go here.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-6 border-t border-b border-gray-100 py-6">
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Price Tier</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Price SGD</h3>
                         <span id="detail-page-price" class="text-3xl font-black text-indigo-600">$0.00</span>
                     </div>
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Stall Inventory Status
-                        </h3>
-                        <span id="detail-page-status"
-                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1">Available</span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Availability Status</h3>
+                        <span id="detail-page-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1">In Stock</span>
                     </div>
                 </div>
             </div>

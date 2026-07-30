@@ -1,4 +1,4 @@
-const likeModel = require("../models/likeModel");
+const likeModel = require("../models/likemodel");
 
 /*
     GET /api/likes/:customerID

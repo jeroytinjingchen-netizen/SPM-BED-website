@@ -50,16 +50,37 @@ app.get("/api/test-db", async (req, res) => {
         });
     } catch (error) {
         console.error("Query Error:", error);
-        res.status(500).json({ status: "FAILED", error: error.message });
+        res.status( 500).json({ status: "FAILED", error: error.message });
     }
 });
+
 // ==========================================
 // surraj - vendor menu nodes
 // ==========================================
+// Route to fetch Owner details for Vendor Dashboard Identity
+app.get('/owners/:id', async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input('ownerId', sql.Char(10), req.params.id)
+            .query('SELECT OwnerName FROM StallOwner WHERE OwnerID = @ownerId'); 
+            
+        if (result.recordset.length > 0) {
+            res.json(result.recordset[0]);
+        } else {
+            res.status(404).json({ message: "Owner not found" });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Database error while loading profile");
+    }
+});
+
 app.get("/stalls/:stallId/menu", menuItemController.getMenu);
 app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 app.delete("/stalls/:stallId/menu/:itemCode", menuItemController.deleteMenu);
 app.put("/stalls/:stallId/menu/:itemCode", menuItemController.updateMenu);
+app.put("/stalls/:stallId/menu/:itemCode/toggle", menuItemController.toggleMenu);
 
 // ==========================================
 // CUSTOMER ROUTES
@@ -87,17 +108,17 @@ app.post("/api/feedback", feedbackController.createFeedback);
 
 // delete feedback
  app.delete("/api/feedback/:fbkID", feedbackController.deleteFeedback);
+
 // ==========================================
 // LIKE / FAVOURITE ROUTES
 // ==========================================
 // Like route
-app.post("/api/likes", likeController.createLike);
-app.post("/api/likes/toggle", likeController.toggleLike);
-app.get("/api/likes/:customerID", likeController.getCustomerLikes);
-app.delete("/api/likes/:customerID/:stallID/:itemCode", likeController.deleteLike);
+app.post("/api/likes/toggle", verifyToken, likeController.toggleLike);
+//app.get("/api/likes/status/:customerId/:stallId/:itemCode", verifyToken, likeController.getLikeStatus);
+//app.get("/api/likes/count/:stallId/:itemCode", likeController.getLikeCount);
+app.get("/api/customers/:customerId/likes", verifyToken, likeController.getCustomerLikes);
 
-// Register Zhen Yu's Menu Module Routes
-app.use("/api/menu", menuRoutes);
+
 
 // ==========================================
 // START SERVER AND TEST CONNECTION
