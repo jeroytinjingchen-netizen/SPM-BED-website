@@ -7,6 +7,88 @@ const dbConfig = require("../dbConfig");
 exports.searchMenu = async (req, res, next) => {
     const q = req.query.q || "";
 
+  try {
+    const pool = await sql.connect(dbConfig);
+    const request = pool.request();
+    let sqlQuery = 'SELECT * FROM MenuItem';
+
+    if (q && q.trim() !== '') {
+      request.input('SearchQuery', sql.VarChar, `%${q}%`);
+      sqlQuery += ' WHERE ItemDesc LIKE @SearchQuery OR ItemCategory LIKE @SearchQuery OR ItemCode LIKE @SearchQuery';
+    }
+
+    const result = await request.query(sqlQuery);
+    res.status(200).json(result.recordset);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 3. GET: View Individual Menu Item Details
+exports.getItemDetails = async (req, res, next) => {
+  const { item_id } = req.params; 
+
+  try {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request()
+      .input('ItemId', sql.Int, item_id)
+      .query('SELECT * FROM MenuItems WHERE id = @ItemId');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "Menu item not found." });
+    }
+
+    res.status(200).json(result.recordset[0]);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 4. PUT: Update Menu Item Details (Your Checkpoint Feature!)
+exports.updateMenuItem = async (req, res, next) => {
+  const { item_id } = req.params; 
+  const { item_name, description, price, availability } = req.body;
+
+  // Validation checking matching the correct keys
+  if (!item_name || price === undefined || availability === undefined) {
+    return res.status(400).json({ 
+      message: "item_name, price, and availability are required fields." 
+    });
+  }
+
+  try {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request()
+      .input('ItemId', sql.Int, item_id)
+      .input('ItemName', sql.VarChar(100), item_name)
+      .input('Desc', sql.Text, description || null)
+      .input('Price', sql.Decimal(10, 2), price)
+      .input('Available', sql.Bit, availability)
+      .query(`
+        UPDATE MenuItems 
+        SET item_name = @ItemName, description = @Desc, price = @Price, availability = @Available 
+        WHERE id = @ItemId
+      `);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "Menu item not found." });
+    }
+
+    res.status(200).json({ 
+      message: "Menu item updated successfully!",
+      updatedItem: { id: item_id, item_name, description, price, availability }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const db = require('../dbconfig');
+
+// ... (keep any existing controller functions you already have here) ...
+
+// ADD YOUR NEW MENU FUNCTION AT THE BOTTOM:
+exports.getMenuItems = async (req, res) => {
     try {
         const pool = await sql.connect(dbConfig);
         const result = await pool.request()

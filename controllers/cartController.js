@@ -152,4 +152,27 @@ module.exports = {
   updateCartItem,
   removeCartItem,
   clearCart,
+  checkout,
 };
+
+// Checkout: create order from cart and clear it
+async function checkout(req, res) {
+  try {
+    const { cartId, pmtType, paymentType, customerId: bodyCustomerId } = req.body;
+    const customerId = req.customer?.customerId || req.customer?.customerID || bodyCustomerId || req.body?.customerId;
+
+    if (!cartId) return res.status(400).json({ error: 'cartId is required' });
+    if (!customerId) return res.status(400).json({ error: 'customerId is required' });
+
+    const cart = await Cart.getCartByIdAndCustomer(cartId, customerId);
+    if (!cart) return res.status(404).json({ error: 'Cart not found for this customer' });
+
+    const orderModel = require('../models/orderModel');
+    const result = await orderModel.createOrderFromCart(cartId, customerId, pmtType || paymentType || 'Cash');
+
+    res.json({ success: true, orderId: result.orderId, items: result.itemsCount });
+  } catch (error) {
+    console.error('Controller checkout error:', error);
+    res.status(500).json({ error: 'Error during checkout' });
+  }
+}

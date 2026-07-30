@@ -13,36 +13,48 @@
 <body class="menu-page">
 
     <!-- Navigation Bar -->
-    <nav class="navbar sticky-navbar">
-        <div class="container-sm">
-            <div class="navbar-brand">
-                <a href="Index.html" class="brand-title">SG Hawker Management</a>
+    <header>
+        <nav class="navbar">
+            <div class="navbar-brand-group">
+                <a href="Index.html" class="btn-back-index">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Index
+                </a>
+                <a class="logo" href="Index.html">
+                    SG Hawker Management
+                </a>
             </div>
-        </div>
-    </nav>
-
-    <!-- TOP RIGHT ACTION BUTTONS (Member 4 Favourites + Member 3 Cart) -->
-    <div class="menu-action-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 1000; display: flex; gap: 0.5rem; align-items: center;">
-        
-        <!-- Member 4: Favourites Button -->
-        <a id="favourite-button" href="favourites.html" class="menu-action-button favourite-button">
-            <span class="menu-action-icon">❤️</span>
-            <span class="menu-action-text">Favourites</span>
-            <span id="favourite-count" class="menu-action-count">0</span>
-        </a>
-
-        <!-- Member 3: Shopping Cart Button -->
-        <a id="cart-button" href="cart.html" class="menu-action-button cart-button">
-            <svg xmlns="http://www.w3.org/2000/svg" class="menu-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:1.25rem; height:1.25rem;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
-                <circle cx="9" cy="20" r="1.5" fill="currentColor" />
-                <circle cx="18" cy="20" r="1.5" fill="currentColor" />
-            </svg>
-            <span class="menu-action-text">Cart</span>
-            <span id="cart-count" class="menu-action-count">0</span>
-        </a>
-
-    </div>
+            
+            <ul class="nav-links" id="nav-menu">
+                <li>
+                    <a href="order-history.html" class="btn-orders">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="favourites.html" class="btn-favorites">
+                        <span class="nav-icon">❤️</span>
+                        Favorites
+                    </a>
+                </li>
+                <li>
+                    <a href="cart.html" class="btn-cart">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.5 2M7 13h10l3-8H6.5" />
+                            <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+                            <circle cx="18" cy="20" r="1.5" fill="currentColor" />
+                        </svg>
+                        Cart <span id="cart-count" class="cart-badge">0</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
 
     <!-- MAIN MENU CATALOG VIEW -->
     <div id="menu-view" class="page-view menu-page-view">
@@ -79,11 +91,11 @@
 
                 <!-- NEW FEATURE 2 (Zhen Yu): Category Filter Buttons -->
                 <div class="category-filter-row" id="category-filters" style="margin-top: 1rem;">
-                    <button onclick="filterCategory('All')" class="category-btn active">All Items</button>
-                    <button onclick="filterCategory('Main')" class="category-btn">Mains</button>
-                    <button onclick="filterCategory('Snack')" class="category-btn">Sides / Snacks</button>
-                    <button onclick="filterCategory('Drink')" class="category-btn">Beverages</button>
-                    <button onclick="filterCategory('Dessert')" class="category-btn">Desserts</button>
+                    <button onclick="filterCategory('All')" class="category-btn" data-category="All">All Items</button>
+                    <button onclick="filterCategory('Main')" class="category-btn" data-category="Main">Mains</button>
+                    <button onclick="filterCategory('Snack')" class="category-btn" data-category="Snack">Sides / Snacks</button>
+                    <button onclick="filterCategory('Drink')" class="category-btn" data-category="Drink">Beverages</button>
+                    <button onclick="filterCategory('Dessert')" class="category-btn" data-category="Dessert">Desserts</button>
                 </div>
 
                 <!-- NEW FEATURE 3 (Zhen Yu): Retrieve Popular / Top-Selling Dishes -->

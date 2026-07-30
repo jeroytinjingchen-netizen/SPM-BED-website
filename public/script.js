@@ -302,31 +302,54 @@ function updateNavigationUI(isLoggedIn) {
 
     if (isLoggedIn) {
         menu.innerHTML = `
+            <li><a onclick="navigateTo('landing-view')">Home</a></li>
             <li><a href="Menu.html">Menu</a></li>
             <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
-            <li><a onclick="handleLogout()" class="btn-primary">Log Out</a></li>
+            <li><a onclick="handleLogout()">Log Out</a></li>
         `;
     } else {
         menu.innerHTML = `
             <li><a onclick="navigateTo('landing-view')">Home</a></li>
-            <li><a href="Menu.html">Menu</a></li>
+            <li><a href="Menu.html" class="btn-primary">Menu</a></li>
             <li><a onclick="navigateTo('login-view')">Log In</a></li>
             <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
         `;
     }
 }
 
-// Check saved auth state on page load
-document.addEventListener("DOMContentLoaded", () => {
-    const savedAuth = localStorage.getItem('hawkerhub-auth');
-    if (savedAuth) {
+function restoreSession() {
+    try {
+        const savedAuth = localStorage.getItem('hawkerhub-auth');
+        if (!savedAuth) return false;
+
+        const parsed = JSON.parse(savedAuth);
+        if (!parsed?.token || !parsed?.customer) return false;
+
+        currentUser = parsed.customer;
+        authToken = parsed.token;
+        document.getElementById('user-display-name').innerText = currentUser.name;
+        document.getElementById('user-display-role').innerText = 'Customer';
+        updateNavigationUI(true);
+        // show dashboard and load live customer data immediately after restore
+        navigateTo('dashboard-view');
+        const liveEl = document.getElementById('live-customer-data');
+        if (liveEl) liveEl.innerText = 'Loading...';
         try {
-            const parsed = JSON.parse(savedAuth);
-            authToken = parsed.token;
-            currentUser = parsed.customer;
-            updateNavigationUI(true);
-        } catch (e) {
-            console.error("Failed to restore session:", e);
+            fetchLiveCustomerData(currentUser.customerId);
+        } catch (err) {
+            console.error('Failed to fetch live customer data on restore:', err);
         }
+        return true;
+    } catch (error) {
+        console.error('Session restore failed:', error);
+        return false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const restored = restoreSession();
+    if (!restored) {
+        updateNavigationUI(false);
+        navigateTo('landing-view');
     }
 });
