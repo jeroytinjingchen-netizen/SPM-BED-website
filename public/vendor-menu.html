@@ -5,20 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HawkerHub - Vendor Dashboard</title>
     
-    <!-- Using the same stylesheets as your teammates -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="Menu.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-900 min-h-screen menu-page">
 
-    <!-- Sticky Navigation Bar -->
     <nav class="navbar sticky-navbar">
         <div class="container-sm">
             <div class="navbar-brand flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
                     <span class="brand-title">SG Hawker Management</span>
-                    <span class="brand-tag ml-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold">Vendor Portal</span>
+                    <!-- Identity Tag -->
+                    <span id="vendor-stall-name" class="brand-tag ml-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold transition-all">Vendor Portal</span>
                 </div>
                 <a href="Index.html" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">Log Out</a>
             </div>
@@ -27,7 +26,7 @@
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        <!-- SECTION: Add New Menu Item (SPG5-52 / 53) -->
+        <!-- SECTION: Add New Menu Item -->
         <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Add New Menu Item</h2>
             
@@ -52,31 +51,34 @@
                         <option value="Beverages">Beverages</option>
                     </select>
                 </div>
+                
+                <div class="flex items-center lg:mt-6">
+                    <input type="checkbox" id="add-special" class="w-4 h-4 text-indigo-600 border-gray-300 rounded">
+                    <label for="add-special" class="ml-2 text-sm font-bold text-gray-700">⭐ Daily Special</label>
+                </div>
+
                 <div class="lg:col-span-5 flex justify-end mt-2">
                     <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition-colors">Submit New Item</button>
                 </div>
             </form>
         </section>
 
-        <!-- SECTION: Digital Menu Display (SPG5-50 & SPG5-48) -->
+        <!-- SECTION: Digital Menu Display -->
         <section>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-900">Manage Digital Menu</h2>
             </div>
-            
-            <!-- Cards will be injected here by JavaScript using your teammate's Menu.css logic -->
             <div id="vendor-menu-grid" class="menu-grid"></div>
         </section>
 
     </main>
 
-    <!-- HIDDEN MODAL: Edit Menu Item (SPG5-48 / 49) -->
+    <!-- HIDDEN MODAL: Edit Menu Item -->
     <div id="edit-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Edit Menu Item</h2>
             
             <form id="edit-item-form" class="space-y-4">
-                <!-- Hidden input to keep track of WHICH item we are editing -->
                 <input type="hidden" id="edit-code">
                 
                 <div>
@@ -96,6 +98,11 @@
                     </select>
                 </div>
                 
+                <div class="flex items-center mt-2">
+                    <input type="checkbox" id="edit-special" class="w-4 h-4 text-indigo-600 border-gray-300 rounded">
+                    <label for="edit-special" class="ml-2 text-sm font-bold text-gray-700">⭐ Daily Special</label>
+                </div>
+                
                 <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
                     <button type="button" onclick="closeEditModal()" class="px-5 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
                     <button type="submit" class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">Save Updates</button>
@@ -104,7 +111,9 @@
         </div>
     </div>
 
-    <!-- Link to the logic -->
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
+
     <script src="vendor.js"></script>
 </body>
 </html>

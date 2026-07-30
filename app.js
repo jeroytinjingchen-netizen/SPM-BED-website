@@ -5,6 +5,7 @@ const dbConfig = require("./dbConfig");
 const menuItemController = require("./controllers/menuItemController");
 const cartController = require("./controllers/cartController");
 const menuController = require("./controllers/menuController");
+const menuRoutes = require("./routes/menuRoutes");
 const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
 const orderHistoryController = require("./controllers/orderHistoryController");
@@ -51,16 +52,37 @@ app.get("/api/test-db", async (req, res) => {
         });
     } catch (error) {
         console.error("Query Error:", error);
-        res.status(500).json({ status: "FAILED", error: error.message });
+        res.status( 500).json({ status: "FAILED", error: error.message });
     }
 });
+
 // ==========================================
 // surraj - vendor menu nodes
 // ==========================================
+// Route to fetch Owner details for Vendor Dashboard Identity
+app.get('/owners/:id', async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input('ownerId', sql.Char(10), req.params.id)
+            .query('SELECT OwnerName FROM StallOwner WHERE OwnerID = @ownerId'); 
+            
+        if (result.recordset.length > 0) {
+            res.json(result.recordset[0]);
+        } else {
+            res.status(404).json({ message: "Owner not found" });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Database error while loading profile");
+    }
+});
+
 app.get("/stalls/:stallId/menu", menuItemController.getMenu);
 app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 app.delete("/stalls/:stallId/menu/:itemCode", menuItemController.deleteMenu);
 app.put("/stalls/:stallId/menu/:itemCode", menuItemController.updateMenu);
+app.put("/stalls/:stallId/menu/:itemCode/toggle", menuItemController.toggleMenu);
 
 // ==========================================
 // CUSTOMER ROUTES
@@ -88,6 +110,7 @@ app.post("/api/feedback", feedbackController.createFeedback);
 
 // delete feedback
  app.delete("/api/feedback/:fbkID", feedbackController.deleteFeedback);
+
 // ==========================================
 // LIKE / FAVOURITE ROUTES
 // ==========================================
@@ -122,8 +145,3 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-// Menu Feature Endpoints
-app.get("/api/menu/search", menuController.searchMenu);
-app.get("/api/menu/stall/:stall_id", menuController.getMenuByStall);
-app.get("/api/menu/item/:item_id", menuController.getItemDetails);
-app.put("/api/menu/item/:item_id", menuController.updateMenuItem);

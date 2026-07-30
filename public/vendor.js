@@ -39,31 +39,47 @@ function renderVendorMenu(items) {
     }
 
     items.forEach(item => {
+        // Check availability (default to true if column isnt there yet)
+        const isAvailable = item.IsAvailable === undefined ? true : item.IsAvailable;
+        const opacityClass = isAvailable ? 'opacity-100' : 'opacity-60 grayscale-[30%]';
+
+        // Feature 3: Check Daily Special
+        const isSpecial = item.IsSpecial ? true : false;
+        const specialBadge = isSpecial ? `<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">⭐ DAILY SPECIAL</span>` : '';
+
         const card = document.createElement("div");
-        card.className = "menu-card flex flex-col justify-between"; 
+        card.className = `menu-card flex flex-col justify-between ${opacityClass} transition-all duration-300`; 
         
         // Match the exact spelling from your MS SQL Database mapping
         card.innerHTML = `
             <div class="menu-card-body">
                 <div class="menu-card-meta flex justify-between">
-                    <span class="menu-card-category">${item.ItemCategory}</span>
+                    <div>
+                        <span class="menu-card-category">${item.ItemCategory}</span>
+                        ${specialBadge}
+                    </div>
                     <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md border border-gray-200">
                         ${item.ItemCode}
                     </span>
                 </div>
-                <h3 class="menu-card-title mt-3">${item.ItemDesc}</h3>
+                <h3 class="menu-card-title mt-3 ${!isAvailable ? 'line-through text-gray-500' : ''}">${item.ItemDesc}</h3>
             </div>
             <div class="menu-card-footer bg-gray-50 border-t border-gray-100 p-4">
-                <span class="menu-card-price text-xl font-bold text-indigo-600">
-                    $${Number(item.ItemPrice).toFixed(2)}
-                </span>
+                <div class="flex justify-between items-center mb-3">
+                    <span class="menu-card-price text-xl font-bold text-indigo-600">
+                        $${Number(item.ItemPrice).toFixed(2)}
+                    </span>
+                    <button onclick="toggleStock('${item.ItemCode}')" class="px-2 py-1 text-xs font-bold uppercase rounded ${isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} transition-colors">
+                        ${isAvailable ? 'In Stock' : 'Out of Stock'}
+                    </button>
+                </div>
                 <div class="menu-card-actions flex gap-2">
-                    <button onclick="openEditModal('${item.ItemCode}', '${item.ItemDesc}', ${item.ItemPrice}, '${item.ItemCategory}')" 
-                            class="px-4 py-2 text-sm font-bold text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors">
+                    <button onclick="openEditModal('${item.ItemCode}', '${item.ItemDesc}', ${item.ItemPrice}, '${item.ItemCategory}', ${isSpecial})" 
+                            class="flex-1 py-2 text-sm font-bold text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors">
                         Edit
                     </button>
                     <button onclick="handleDelete('${item.ItemCode}')" 
-                            class="px-4 py-2 text-sm font-bold text-red-700 bg-red-100 rounded-full hover:bg-red-200 transition-colors">
+                            class="flex-1 py-2 text-sm font-bold text-red-700 bg-red-100 rounded-full hover:bg-red-200 transition-colors">
                         Delete
                     </button>
                 </div>
@@ -84,7 +100,8 @@ async function handleAddItem(event) {
         ItemCode: document.getElementById("add-code").value,
         ItemDesc: document.getElementById("add-desc").value,
         ItemPrice: parseFloat(document.getElementById("add-price").value),
-        ItemCategory: document.getElementById("add-category").value
+        ItemCategory: document.getElementById("add-category").value,
+        IsSpecial: document.getElementById("add-special").checked
     };
 
     try {
@@ -139,11 +156,12 @@ async function handleDelete(itemCode) {
 // ==========================================
 
 // 1. Open the modal and pre-fill it with the current data
-function openEditModal(code, desc, price, category) {
+function openEditModal(code, desc, price, category, isSpecial) {
     document.getElementById("edit-code").value = code;
     document.getElementById("edit-desc").value = desc;
     document.getElementById("edit-price").value = price;
     document.getElementById("edit-category").value = category;
+    document.getElementById("edit-special").checked = isSpecial;
     
     document.getElementById("edit-modal").classList.remove("hidden");
 }
@@ -163,7 +181,8 @@ async function handleEditSubmit(event) {
     const payload = {
         ItemDesc: document.getElementById("edit-desc").value,
         ItemPrice: parseFloat(document.getElementById("edit-price").value),
-        ItemCategory: document.getElementById("edit-category").value
+        ItemCategory: document.getElementById("edit-category").value,
+        IsSpecial: document.getElementById("edit-special").checked
     };
 
     try {
@@ -186,3 +205,49 @@ async function handleEditSubmit(event) {
         alert("Failed to connect to the server.");
     }
 }
+
+// ==========================================
+// TOGGLE STOCK: Update availability (PUT)
+// ==========================================
+async function toggleStock(itemCode) {
+    try {
+        const response = await fetch(`/stalls/${stallId}/menu/${itemCode}/toggle`, {
+            method: 'PUT'
+        });
+        
+        if (response.ok) {
+            fetchVendorMenu(); // Refresh the grid to show new status
+        } else {
+            const errorData = await response.json();
+            alert("Error: " + errorData.error);
+        }
+    } catch (error) {
+        console.error("Error toggling stock:", error);
+        alert("Failed to connect to the server.");
+    }
+}
+
+// ==========================================
+// IDENTITY: Fetch vendor details for navbar
+// ==========================================
+async function loadVendorIdentity() {
+    try {
+        // TEMPORARY: Hardcode an owner ID that exists in your database to test
+        const mockOwnerId = "OWN000001"; // Update this to a real ID from your DB!
+        
+        const response = await fetch(`/owners/${mockOwnerId}`);
+        if (!response.ok) throw new Error("Failed to fetch owner profile");
+        
+        const data = await response.json();
+        
+        // Target the header and update the text with the OwnerName
+        const headerElement = document.getElementById("vendor-stall-name");
+        if (headerElement) {
+            headerElement.textContent = `Welcome, ${data.OwnerName}`;
+        }
+    } catch (error) {
+        console.error("Error loading vendor identity:", error);
+    }
+}
+
+loadVendorIdentity();
