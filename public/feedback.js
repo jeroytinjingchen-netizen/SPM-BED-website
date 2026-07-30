@@ -1,168 +1,120 @@
-const feedbackForm = document.getElementById("feedbackForm");
+document.addEventListener("DOMContentLoaded", () => {
+    const feedbackForm = document.getElementById("feedbackForm");
+    const feedbackMessage = document.getElementById("feedbackMessage");
+    const submitButton = document.getElementById("feedbackSubmitButton");
 
-const stallSelect = document.getElementById("stallID");
-const ratingInput = document.getElementById("fbkRating");
-const commentInput = document.getElementById("fbkComment");
-
-const stars = document.querySelectorAll(".star");
-
-const ratingText = document.getElementById("ratingText");
-const characterCount = document.getElementById("characterCount");
-
-const stallError = document.getElementById("stallError");
-const ratingError = document.getElementById("ratingError");
-const formMessage = document.getElementById("formMessage");
-
-/*
-    Star rating
-*/
-stars.forEach((star) => {
-    star.addEventListener("click", () => {
-        const selectedRating = Number(star.dataset.rating);
-
-        ratingInput.value = selectedRating;
-
-        ratingText.textContent =
-            `${selectedRating} out of 5 stars selected`;
-
-        stars.forEach((currentStar) => {
-            const currentRating =
-                Number(currentStar.dataset.rating);
-
-            if (currentRating <= selectedRating) {
-                currentStar.classList.add("selected");
-            } else {
-                currentStar.classList.remove("selected");
-            }
-        });
-
-        ratingError.textContent = "";
-    });
-});
-
-/*
-    Comment character counter
-*/
-commentInput.addEventListener("input", () => {
-    const currentLength = commentInput.value.length;
-
-    characterCount.textContent =
-        `${currentLength} / 200`;
-});
-
-/*
-    Clear stall error after selecting a stall
-*/
-stallSelect.addEventListener("change", () => {
-    if (stallSelect.value) {
-        stallError.textContent = "";
-    }
-});
-
-/*
-    Submit feedback form
-*/
-feedbackForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    clearMessages();
-
-    const stallID = stallSelect.value;
-    const fbkRating = Number(ratingInput.value);
-    const fbkComment = commentInput.value.trim();
-
-    let isValid = true;
-
-    if (!stallID) {
-        stallError.textContent = "Please select a food stall.";
-        isValid = false;
-    }
-
-    if (!fbkRating) {
-        ratingError.textContent = "Please select a rating.";
-        isValid = false;
-    }
-
-    if (!fbkComment) {
-        showMessage("Please enter a comment.", "error");
-        isValid = false;
-    }
-
-    if (!isValid) {
+    if (!feedbackForm) {
         return;
     }
 
-    const feedbackData = {
-        customerID: "CUS000001",
-        stallID: stallID,
-        fbkRating: fbkRating,
-        fbkComment: fbkComment
-    };
+    feedbackForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-    try {
-        const response = await fetch("http://localhost:3000/api/feedback", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(feedbackData)
-        });
+        // Get selected stall
+        const stallID = document.getElementById("stallID").value;
 
-        const result = await response.json();
+        const rating = Number(
+            document.getElementById("feedbackRating").value
+        );
 
-        if (!response.ok) {
-            throw new Error(
-                result.message || "Failed to submit feedback."
+        const comment = document
+            .getElementById("feedbackComment")
+            .value
+            .trim();
+
+
+        if (!stallID || !rating || !comment) {
+            showFeedbackMessage(
+                "Please complete all feedback fields.",
+                "error"
             );
+            return;
         }
 
-        showMessage(
-            result.message || "Feedback submitted successfully!",
-            "success"
-        );
+        // Get the logged-in customer from the login page
+const savedAuth = localStorage.getItem("hawkerhub-auth");
 
-        resetForm();
+if (!savedAuth) {
+    showFeedbackMessage(
+        "Please log in before submitting feedback.",
+        "error"
+    );
+    return;
+}
 
-    } catch (error) {
-        console.error("Submit feedback error:", error);
+const authData = JSON.parse(savedAuth);
 
-        showMessage(
-            error.message || "Unable to submit feedback.",
+const customerID = authData.customer.customerId;
+const token = authData.token;
+
+        const feedbackData = {
+            customerID,
+            stallID,
+            fbkRating: rating,
+            fbkComment: comment
+        };
+
+        try {
+            submitButton.disabled = true;
+            submitButton.innerHTML = `
+                <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                <span>Submitting...</span>
+            `;
+
+            const headers = {
+                "Content-Type": "application/json"
+            };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const response = await fetch("/api/feedback", {
+                method: "POST",
+                headers,
+                body: JSON.stringify(feedbackData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message ||
+                    result.error ||
+                    "Unable to submit feedback."
+                );
+            }
+
+            showFeedbackMessage(
+                "Feedback submitted successfully!",
+                "success"
+            );
+
+            feedbackForm.reset();
+
+        } catch (error) {
+            console.error("Feedback error:", error);
+
+            showFeedbackMessage(
+                error.message || "Unable to submit feedback.",
+                "error"
+            );
+
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = "<span>Submit Feedback</span>";
+        }
+    });
+
+    function showFeedbackMessage(message, type) {
+        feedbackMessage.textContent = message;
+
+        feedbackMessage.classList.remove(
+            "show",
+            "success",
             "error"
         );
+
+        feedbackMessage.classList.add("show", type);
     }
 });
-
-/*
-    Show success or error message
-*/
-function showMessage(message, type) {
-    formMessage.textContent = message;
-    formMessage.className = `form-message ${type}`;
-}
-
-/*
-    Clear old messages
-*/
-function clearMessages() {
-    stallError.textContent = "";
-    ratingError.textContent = "";
-
-    formMessage.textContent = "";
-    formMessage.className = "form-message";
-}
-
-/*
-    Reset form after successful submission
-*/
-function resetForm() {
-    feedbackForm.reset();
-
-    ratingInput.value = "";
-    ratingText.textContent = "No rating selected";
-    characterCount.textContent = "0 / 200";
-
-    stars.forEach((star) => {
-        star.classList.remove("selected");
-    });
-}

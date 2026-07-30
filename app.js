@@ -58,6 +58,7 @@ app.get("/api/test-db", async (req, res) => {
 app.get("/stalls/:stallId/menu", menuItemController.getMenu);
 app.post("/stalls/:stallId/menu", menuItemController.addMenu);
 app.delete("/stalls/:stallId/menu/:itemCode", menuItemController.deleteMenu);
+app.put("/stalls/:stallId/menu/:itemCode", menuItemController.updateMenu);
 
 // ==========================================
 // CUSTOMER ROUTES

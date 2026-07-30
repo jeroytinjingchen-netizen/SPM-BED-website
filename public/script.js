@@ -135,9 +135,117 @@ async function fetchLiveCustomerData(customerId) {
         }
 
         output.innerText = JSON.stringify(data, null, 2);
+
+        // Pre-fill the "Update Your Profile" form with the values currently in the database
+        document.getElementById('update-name').value = data.CustName || "";
+        document.getElementById('update-contact').value = data.CustContactNo || "";
+        document.getElementById('update-email').value = data.CustEmail || "";
     } catch (err) {
         console.error(err);
         output.innerText = "Could not reach the server.";
+    }
+}
+
+// Profile Update Handler Engine (PUT /api/customers/:id)
+async function handleUpdateProfile(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('update-alert');
+    alertBox.style.display = "none";
+
+    if (!currentUser || !authToken) {
+        showAlert(alertBox, "danger", "Your session has expired. Please log in again.");
+        return;
+    }
+
+    const custName = document.getElementById('update-name').value.trim();
+    const custContactNo = document.getElementById('update-contact').value.trim();
+    const custEmail = document.getElementById('update-email').value.trim().toLowerCase();
+
+    const submitBtn = document.getElementById('update-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Saving...";
+
+    try {
+        const response = await fetch(`${API_BASE}/${currentUser.customerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ custName, custContactNo, custEmail })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showAlert(alertBox, "danger", data.message || "Update failed.");
+            return;
+        }
+
+        // Keep the in-memory user, displayed name, and localStorage in sync with what was just saved
+        currentUser.name = custName;
+        currentUser.email = custEmail;
+        document.getElementById('user-display-name').innerText = currentUser.name;
+        localStorage.setItem('hawkerhub-auth', JSON.stringify({
+            token: authToken,
+            customer: currentUser
+        }));
+
+        showAlert(alertBox, "success", data.message || "Profile updated successfully.");
+
+        // Refresh the "Live data from the database" panel so it reflects the change
+        fetchLiveCustomerData(currentUser.customerId);
+    } catch (err) {
+        console.error(err);
+        showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Save Changes";
+    }
+}
+
+// Account Deletion Handler Engine (DELETE /api/customers/:id)
+async function handleDeleteAccount() {
+    const alertBox = document.getElementById('delete-alert');
+    alertBox.style.display = "none";
+
+    if (!currentUser || !authToken) {
+        showAlert(alertBox, "danger", "Your session has expired. Please log in again.");
+        return;
+    }
+
+    const confirmed = window.confirm(
+        "Are you sure you want to permanently delete your account? This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    const deleteBtn = document.getElementById('delete-account-btn');
+    deleteBtn.disabled = true;
+    deleteBtn.innerText = "Deleting...";
+
+    try {
+        const response = await fetch(`${API_BASE}/${currentUser.customerId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            // e.g. 409 when the account still has related orders/feedback referencing it
+            showAlert(alertBox, "danger", data.message || "Could not delete account.");
+            deleteBtn.disabled = false;
+            deleteBtn.innerText = "Delete My Account";
+            return;
+        }
+
+        alert(data.message || "Your account has been deleted.");
+        handleLogout();
+    } catch (err) {
+        console.error(err);
+        showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
+        deleteBtn.disabled = false;
+        deleteBtn.innerText = "Delete My Account";
     }
 }
 
