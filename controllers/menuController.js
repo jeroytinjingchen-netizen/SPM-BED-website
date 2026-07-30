@@ -10,7 +10,7 @@ exports.getMenuByStall = async (req, res, next) => {
     const result = await pool.request()
       .input('VendorId', sql.Int, stall_id) // Mapping param to an Integer
       // Targets the exact column 'vendor_id' inside the 'MenuItems' table
-      .query('SELECT * FROM MenuItem WHERE vendor_id = @VendorId'); 
+      .query('SELECT * FROM MenuItems WHERE vendor_id = @VendorId'); 
 
     res.status(200).json(result.recordset);
   } catch (err) {
@@ -26,7 +26,7 @@ exports.searchMenu = async (req, res, next) => {
     const pool = await sql.connect(dbConfig);
     const result = await pool.request()
       .input('SearchQuery', sql.VarChar, `%${q}%`)
-      .query('SELECT * FROM MenuItem WHERE item_name LIKE @SearchQuery OR description LIKE @SearchQuery');
+      .query('SELECT * FROM MenuItems WHERE item_name LIKE @SearchQuery OR description LIKE @SearchQuery');
 
     res.status(200).json(result.recordset);
   } catch (err) {
