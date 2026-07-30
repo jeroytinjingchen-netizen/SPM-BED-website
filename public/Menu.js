@@ -1,12 +1,75 @@
 // Mock Database Array tailored to Appendix A Hawker Operations (Main dishes, drinks)
-const menuItems = [
-    { id: 1, name: "Signature Hainanese Chicken Rice", category: "Mains", price: 5.50, description: "Tender poached chicken served with fragrant seasoned rice, chili sauce, and minced ginger.", available: true },
-    { id: 2, name: "Wok-Fried Hokkien Mee", category: "Mains", price: 6.00, description: "Stir-fried yellow noodles and thick bee hoon braised in rich prawn broth, topped with fresh prawns and squid.", available: true },
-    { id: 3, name: "Crispy Handmade Spring Rolls", category: "Sides", price: 3.50, description: "Deep-fried golden pastry skins stuffed with seasoned shredded turnips, carrots, and mushrooms. Serves 3 pieces.", available: true },
-    { id: 4, name: "Iced Kopi Melaka", category: "Beverages", price: 2.80, description: "Traditional Nanyang dark roasted coffee sweetened with rich, aromatic palm sugar syrup and fresh milk.", available: true },
-    { id: 5, name: "Spicy Laksa Lemak", category: "Mains", price: 6.50, description: "Thick rice noodles served in a rich, spicy coconut milk curry broth topped with juicy cockles and fish cakes.", available: true },
-    { id: 6, name: "Charcoal Grilled Chicken Satay", category: "Sides", price: 4.80, description: "Grilled marinated chicken skewers charred over charcoal, accompanied by a robust spicy peanut dipping sauce.", available: false },
-    { id: 7, name: "Teh Tarik (Frothy Milk Tea)", category: "Beverages", price: 2.20, description: "Black tea combined with condensed milk, poured back and forth repeatedly to create a smooth, frothy head.", available: true }
+let menuItems = [
+    {
+        id: 1,
+        stallID: "STL0000001",
+        itemCode: "ITM01",
+        name: "Signature Hainanese Chicken Rice",
+        category: "Mains",
+        price: 5.50,
+        description: "Tender poached chicken served with fragrant seasoned rice, chili sauce, and minced ginger.",
+        available: true
+    },
+    {
+        id: 2,
+        stallID: "STL0000002",
+        itemCode: "ITM02",
+        name: "Wok-Fried Hokkien Mee",
+        category: "Mains",
+        price: 6.00,
+        description: "Stir-fried yellow noodles and thick bee hoon braised in rich prawn broth, topped with prawns and squid.",
+        available: true
+    },
+    {
+        id: 3,
+        stallID: "STL0000003",
+        itemCode: "ITM03",
+        name: "Crispy Handmade Spring Rolls",
+        category: "Sides",
+        price: 3.50,
+        description: "Deep-fried golden pastry skins stuffed with seasoned shredded turnips, carrots, and mushrooms.",
+        available: true
+    },
+    {
+        id: 4,
+        stallID: "STL0000004",
+        itemCode: "ITM04",
+        name: "Iced Kopi Melaka",
+        category: "Beverages",
+        price: 2.80,
+        description: "Traditional Nanyang coffee sweetened with aromatic palm sugar syrup and fresh milk.",
+        available: true
+    },
+    {
+        id: 5,
+        stallID: "STL0000005",
+        itemCode: "ITM05",
+        name: "Spicy Laksa Lemak",
+        category: "Mains",
+        price: 6.50,
+        description: "Thick rice noodles served in rich spicy coconut curry broth with fish cake and cockles.",
+        available: true
+    },
+    {
+        id: 6,
+        stallID: "STL0000006",
+        itemCode: "ITM06",
+        name: "Charcoal Grilled Chicken Satay",
+        category: "Sides",
+        price: 4.80,
+        description: "Grilled marinated chicken skewers served with spicy peanut sauce.",
+        available: false
+    },
+    {
+        id: 7,
+        stallID: "STL0000007",
+        itemCode: "ITM07",
+        name: "Teh Tarik (Frothy Milk Tea)",
+        category: "Beverages",
+        price: 2.20,
+        description: "Traditional pulled milk tea with a smooth and frothy texture.",
+        available: true
+    }
 ];
 
 // Application Routing State Management Variables
@@ -72,9 +135,32 @@ async function fetchMenuItemsFromBackend() {
         const data = await response.json();
         
         // Handle both direct arrays or wrapped object responses (e.g. { items: [...] })
-        menuItems = Array.isArray(data) ? data : (data.items || data.menuItems || []);
-        
-        renderMenu(); 
+       const backendItems = Array.isArray(data)
+    ? data
+    : (data.items || data.menuItems || []);
+
+menuItems = backendItems.map((item, index) => ({
+    id: item.id || item.MenuItemID || index + 1,
+
+    stallID: item.stallID || item.StallID,
+    itemCode: item.itemCode || item.ItemCode,
+
+    name: item.name || item.ItemDesc,
+    category: item.category || item.ItemCategory,
+    price: Number(item.price || item.ItemPrice),
+
+    description:
+        item.description ||
+        item.ItemDescription ||
+        item.ItemDesc,
+
+    available:
+        item.available !== undefined
+            ? item.available
+            : item.Available !== undefined
+                ? item.Available
+                : true
+}));
     } catch (error) {
         console.error("Error fetching menu items from BED:", error);
         const itemCountEl = document.getElementById("item-count");
@@ -212,17 +298,16 @@ function renderMenu() {
                 <div class="menu-card-actions">
                    <div class="menu-card-actions">
 
+        <div class="menu-card-actions">
+
     <button
-        class="menu-like-button"
-        onclick="toggleLike(this)"">
-        ♡
-    </button>
+    class="heart-btn"
+    onclick="toggleHeart(this, '${item.stallID}', '${item.itemCode}')">
+    🤍
+</button>
 
     <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
         View Details
-        <svg xmlns="http://www.w3.org/2000/svg" class="menu-card-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
     </button>
 
     <button onclick="addToCart(${item.id})" class="menu-card-button">
@@ -237,11 +322,15 @@ function renderMenu() {
     });
 }
 
-function toggleLike(button) {
-    if (button.innerHTML === "♡") {
-        button.innerHTML = "❤️";
+
+
+function toggleHeart(button) {
+    if (button.classList.contains("liked")) {
+        button.classList.remove("liked");
+        button.textContent = "🤍";
     } else {
-        button.innerHTML = "♡";
+        button.classList.add("liked");
+        button.textContent = "❤️";
     }
 }
 
@@ -346,19 +435,18 @@ window.addEventListener("storage", () => {
     renderCartPage();
 });
 
-// Routes to the dedicated full detailed item display page view
 function openItemDetailsPage(id) {
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
 
-    // Inject matching row record dataset metrics straight onto UI views
     document.getElementById("detail-page-title").textContent = item.name;
     document.getElementById("detail-page-badge").textContent = item.category;
     document.getElementById("detail-page-description").textContent = item.description;
     document.getElementById("detail-page-price").textContent = `$${item.price.toFixed(2)}`;
-    
+
     const statusEl = document.getElementById("detail-page-status");
-    if(item.available) {
+
+    if (item.available) {
         statusEl.textContent = "In Stock / Available";
         statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
     } else {
@@ -366,99 +454,137 @@ function openItemDetailsPage(id) {
         statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800";
     }
 
-    async function toggleMenuLike(itemId, button) {
-    console.log("Heart clicked. Item ID:", itemId);
+    navigateTo('details-view');
+}
 
-    const item = menuItems.find(menuItem => menuItem.id === itemId);
+// ===============================
+// LIKE BUTTON
+// ===============================
+async function toggleHeart(button, stallID, itemCode) {
+    const token = localStorage.getItem("token");
+    const customerText = localStorage.getItem("customer");
 
-    console.log("Menu item found:", item);
-
-    if (!item) {
-        alert("Menu item not found.");
-        return;
-    }
-
-    const authData = JSON.parse(
-        localStorage.getItem("hawkerhub-auth")
-    );
-
-    console.log("Login data:", authData);
-
-    if (
-        !authData ||
-        !authData.customer ||
-        !authData.customer.customerId ||
-        !authData.token
-    ) {
+    if (!token || !customerText) {
         alert("Please log in first.");
+        window.location.href = "Index.html";
         return;
     }
 
-    button.disabled = true;
+    let customer;
 
     try {
-        const requestBody = {
-            customerID: authData.customer.customerId,
-            stallID: item.stallID,
-            itemCode: item.itemCode
-        };
+        customer = JSON.parse(customerText);
+    } catch (error) {
+        console.error("Invalid customer data:", error);
+        alert("Login information is invalid. Please log in again.");
+        return;
+    }
 
-        console.log("Sending like request:", requestBody);
+    const customerID = customer.customerId;
 
+    if (!customerID) {
+        alert("Customer ID cannot be found.");
+        return;
+    }
+
+    try {
         const response = await fetch("/api/likes/toggle", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${authData.token}`
+                Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+                customerID,
+                stallID,
+                itemCode
+            })
         });
 
-        const data = await response.json();
+        const result = await response.json();
 
-        console.log("Like response status:", response.status);
-        console.log("Like response data:", data);
+        console.log(result);
 
         if (!response.ok) {
-            throw new Error(
-                data.message || "Unable to update favourite."
-            );
+            throw new Error(result.message);
         }
 
-        if (data.liked === true) {
+        if (result.liked) {
             button.textContent = "❤️";
             button.classList.add("liked");
         } else {
-            button.textContent = "♡";
+            button.textContent = "🤍";
             button.classList.remove("liked");
         }
 
     } catch (error) {
-        console.error("Like request failed:", error);
+        console.error(error);
         alert(error.message);
-    } finally {
-        button.disabled = false;
     }
 }
-    async function loadFavouriteCount() {
 
-    const authData = JSON.parse(localStorage.getItem("hawkerhub-auth"));
+// ===============================
+// LIKE BUTTON
+// ===============================
+async function toggleHeart(button, stallID, itemCode) {
+    const token = localStorage.getItem("token");
+    const customerText = localStorage.getItem("customer");
 
-    if (!authData) return;
+    if (!token || !customerText) {
+        alert("Please log in first.");
+        window.location.href = "Index.html";
+        return;
+    }
 
-    const customerID = authData.customer.customerId;
+    let customer;
 
     try {
-
-        const response = await fetch(`/api/likes/${customerID}`);
-
-        const data = await response.json();
-
-        document.getElementById("favourite-count").textContent = data.totalLikes;
-
-    } catch (err) {
-        console.error("Unable to load favourite count:", err);
+        customer = JSON.parse(customerText);
+    } catch (error) {
+        console.error("Invalid customer data:", error);
+        alert("Login information is invalid. Please log in again.");
+        return;
     }
-}
 
+    const customerID = customer.customerId;
+
+    if (!customerID) {
+        alert("Customer ID cannot be found.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/likes/toggle", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                customerID,
+                stallID,
+                itemCode
+            })
+        });
+
+        const result = await response.json();
+
+        console.log(result);
+
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+
+        if (result.liked) {
+            button.textContent = "❤️";
+            button.classList.add("liked");
+        } else {
+            button.textContent = "🤍";
+            button.classList.remove("liked");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+    }
 }

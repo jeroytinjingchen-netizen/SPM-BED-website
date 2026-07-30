@@ -500,3 +500,20 @@ body.menu-page {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.heart-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    margin-right: 8px;
+}
+
+.heart-btn:hover {
+    transform: scale(1.2);
+}
+
+.heart-btn.liked {
+    color: red;
+}

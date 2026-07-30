@@ -92,8 +92,9 @@ app.post("/api/feedback", feedbackController.createFeedback);
 // ==========================================
 // Like route
 app.post("/api/likes", likeController.createLike);
+app.post("/api/likes/toggle", likeController.toggleLike);
 app.get("/api/likes/:customerID", likeController.getCustomerLikes);
-
+app.delete("/api/likes/:customerID/:stallID/:itemCode", likeController.deleteLike);
 
 // Register Zhen Yu's Menu Module Routes
 app.use("/api/menu", menuRoutes);
