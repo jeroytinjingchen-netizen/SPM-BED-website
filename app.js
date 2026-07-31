@@ -133,8 +133,7 @@ app.post("/api/likes/toggle", verifyToken, likeController.toggleLike);
 //app.get("/api/likes/status/:customerId/:stallId/:itemCode", verifyToken, likeController.getLikeStatus);
 //app.get("/api/likes/count/:stallId/:itemCode", likeController.getLikeCount);
 app.get("/api/customers/:customerId/likes", verifyToken, likeController.getCustomerLikes);
-
-
+//app.get("/api/likes",verifyToken,likeController.getLikedItems);
 
 // ==========================================
 // START SERVER AND TEST CONNECTION
