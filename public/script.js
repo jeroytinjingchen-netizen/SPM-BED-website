@@ -17,6 +17,16 @@ function navigateTo(viewId) {
         return;
     }
 
+    if (viewId === 'dashboard-view') {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    if (viewId === 'landing-view' && !window.location.pathname.endsWith('/Index.html') && !window.location.pathname.endsWith('/')) {
+        window.location.href = 'Index.html';
+        return;
+    }
+
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
     });
@@ -76,8 +86,8 @@ async function handleRegistration(e) {
             }));
         }
 
-        // Redirect directly to Menu.html after successful registration
-        window.location.href = 'Menu.html';
+        // Redirect to the dashboard after a successful registration
+        window.location.href = 'dashboard.html';
     } catch (err) {
         console.error(err);
         showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
@@ -123,8 +133,8 @@ async function handleLogin(e) {
         document.getElementById('login-form').reset();
         updateNavigationUI(true);
 
-        // Redirect directly to Menu.html upon login
-        window.location.href = 'Menu.html';
+        // Redirect to the dashboard after a successful login
+        window.location.href = 'dashboard.html';
     } catch (err) {
         console.error(err);
         showAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
@@ -284,7 +294,7 @@ function handleLogout() {
     authToken = null;
     localStorage.removeItem('hawkerhub-auth');
     updateNavigationUI(false);
-    navigateTo('landing-view');
+    window.location.href = 'Index.html';
 }
 
 // Context Utility Alert Box Presenter Script
@@ -302,9 +312,9 @@ function updateNavigationUI(isLoggedIn) {
 
     if (isLoggedIn) {
         menu.innerHTML = `
-            <li><a onclick="navigateTo('landing-view')">Home</a></li>
+            <li><a href="Index.html">Home</a></li>
             <li><a href="Menu.html">Menu</a></li>
-            <li><a onclick="navigateTo('dashboard-view')">Dashboard</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
             <li><a onclick="handleLogout()">Log Out</a></li>
         `;
     } else {
@@ -325,17 +335,22 @@ function restoreSession() {
 
         currentUser = parsed.customer;
         authToken = parsed.token;
-        document.getElementById('user-display-name').innerText = currentUser.name;
-        document.getElementById('user-display-role').innerText = 'Customer';
+
+        const nameEl = document.getElementById('user-display-name');
+        if (nameEl) nameEl.innerText = currentUser.name || currentUser.CustName || 'Customer';
+
+        const roleEl = document.getElementById('user-display-role');
+        if (roleEl) roleEl.innerText = 'Customer';
+
         updateNavigationUI(true);
-        // show dashboard and load live customer data immediately after restore
-        navigateTo('dashboard-view');
-        const liveEl = document.getElementById('live-customer-data');
-        if (liveEl) liveEl.innerText = 'Loading...';
-        try {
-            fetchLiveCustomerData(currentUser.customerId);
-        } catch (err) {
-            console.error('Failed to fetch live customer data on restore:', err);
+        if (window.location.pathname.endsWith('/dashboard.html') || window.location.pathname.endsWith('/dashboard')) {
+            const liveEl = document.getElementById('live-customer-data');
+            if (liveEl) liveEl.innerText = 'Loading...';
+            try {
+                fetchLiveCustomerData(currentUser.customerId);
+            } catch (err) {
+                console.error('Failed to fetch live customer data on restore:', err);
+            }
         }
         return true;
     } catch (error) {

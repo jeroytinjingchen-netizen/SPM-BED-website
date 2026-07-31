@@ -29,18 +29,47 @@
 
         .navbar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0.75rem 1rem;
+            padding: 0.75rem 1rem 0.75rem 0.5rem;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-shrink: 0;
+            min-width: 0;
+            margin-left: 0;
+            width: 12rem;
+        }
+
+        .navbar-back-spacer {
+            width: 4.2rem;
+            flex-shrink: 0;
+        }
+
+        .navbar-center {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 0;
+            flex: 0 0 auto;
         }
 
         .logo {
+            display: inline-flex;
+            align-items: center;
             font-weight: bold;
             font-size: 1.4rem;
             color: var(--primary-color);
             text-decoration: none;
+            line-height: 1.2;
+            min-height: 2.2rem;
+            white-space: nowrap;
+            margin-left: 0.25rem;
         }
 
         .nav-links {
@@ -93,11 +122,33 @@
             align-items: center;
             gap: 0.9rem;
             flex-wrap: wrap;
-            margin-right: 0.5rem;
+            margin-right: 1.5rem;
+            margin-left: -0.25rem;
         }
 
         .btn-orders,
-        .btn-favorites,
+        .btn-favorites {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: #111827 !important;
+            padding: 0;
+            border-radius: 0;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: none;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .btn-orders:hover,
+        .btn-favorites:hover {
+            background: transparent;
+            transform: none;
+            color: #111827 !important;
+        }
+
         .btn-cart {
             display: inline-flex;
             align-items: center;
@@ -113,31 +164,38 @@
             text-decoration: none;
         }
 
-        .btn-orders:hover,
-        .btn-favorites:hover,
         .btn-cart:hover {
             background-color: #b82d17;
             transform: translateY(-2px);
+            color: white !important;
         }
 
         .btn-back-index,
         .btn-back-menu {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.35rem;
-            color: #111827;
-            background: none;
-            border: none;
-            padding: 0;
+            color: var(--primary-color);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             text-decoration: none;
-            transition: color 0.2s ease;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            flex-shrink: 0;
+            margin-left: 0;
+            line-height: 1;
+            min-width: 4.2rem;
         }
 
         .btn-back-index:hover,
         .btn-back-menu:hover {
             color: var(--primary-color);
+            background: #fff5f2;
+            border-color: var(--primary-color);
         }
 
         .nav-icon {

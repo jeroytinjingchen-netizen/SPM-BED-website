@@ -11,20 +11,27 @@
 <body class="bg-gray-50 font-sans text-gray-900 min-h-screen">
     <header>
         <nav class="navbar">
-            <a class="logo" href="Index.html">
-                SG Hawker Management
-            </a>
+            <div class="navbar-left">
+                <a href="Menu.html" class="btn-back-menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                </a>
+                <div class="navbar-center">
+                    <a class="logo" href="Index.html">
+                        SG Hawker Management
+                    </a>
+                </div>
+            </div>
             
             <ul class="nav-links" id="nav-menu">
-                <li>
-                    <a href="Menu.html">Menu</a>
-                </li>
                 <li>
                     <a href="order-history.html" class="btn-orders">
                         <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Orders
+                        History
                     </a>
                 </li>
             </ul>
@@ -52,7 +59,7 @@
                     </svg>
                     <h2 style="margin-top: 1rem; font-size: 1.1rem; font-weight: 600; color: #111827;">Your cart is empty</h2>
                     <p style="margin-top: 0.25rem; font-size: 0.9rem; color: #6b7280;">Add dishes from the menu to see them here.</p>
-                    <a href="Menu.html" class="menu-card-button" style="margin-top: 1.5rem; display: inline-flex; text-decoration: none; align-items: center; justify-content: center;">Browse Menu</a>
+                    <a href="Menu.html" class="btn-back-menu" style="margin-top: 1.5rem; display: inline-flex; align-items: center; justify-content: center;">Back to Menu</a>
                 </div>
             </section>
 
@@ -69,7 +76,7 @@
                     </div>
                 </div>
                 <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
-                    <a href="Menu.html" class="menu-card-button" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 100%;">Continue Shopping</a>
+                    <a href="Menu.html" class="btn-back-menu" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 100%;">Back to Menu</a>
                     <button id="checkout-button" type="button" class="menu-card-button hidden" style="width: 100%; display: inline-flex; align-items: center; justify-content: center;">Checkout</button>
                 </div>
             </aside>
