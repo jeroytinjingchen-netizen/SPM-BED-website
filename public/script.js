@@ -143,10 +143,6 @@ async function handleLogin(e) {
 
 // GET /api/customers/:id using stored JWT
 async function fetchLiveCustomerData(customerId) {
-    const output = document.getElementById('live-customer-data');
-    if (!output) return;
-    output.innerText = "Loading...";
-
     try {
         const response = await fetch(`${API_BASE}/${customerId}`, {
             method: 'GET',
@@ -156,11 +152,9 @@ async function fetchLiveCustomerData(customerId) {
         const data = await response.json();
 
         if (!response.ok) {
-            output.innerText = `Error: ${data.message}`;
+            console.error(`Error fetching customer data: ${data.message}`);
             return;
         }
-
-        output.innerText = JSON.stringify(data, null, 2);
 
         // Pre-fill the "Update Your Profile" form
         const updateName = document.getElementById('update-name');
@@ -171,8 +165,7 @@ async function fetchLiveCustomerData(customerId) {
         if (updateContact) updateContact.value = data.CustContactNo || "";
         if (updateEmail) updateEmail.value = data.CustEmail || "";
     } catch (err) {
-        console.error(err);
-        output.innerText = "Could not reach the server.";
+        console.error('Could not reach the server.', err);
     }
 }
 
@@ -344,8 +337,6 @@ function restoreSession() {
 
         updateNavigationUI(true);
         if (window.location.pathname.endsWith('/dashboard.html') || window.location.pathname.endsWith('/dashboard')) {
-            const liveEl = document.getElementById('live-customer-data');
-            if (liveEl) liveEl.innerText = 'Loading...';
             try {
                 fetchLiveCustomerData(currentUser.customerId);
             } catch (err) {

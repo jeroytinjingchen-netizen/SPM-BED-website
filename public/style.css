@@ -70,6 +70,13 @@
             min-height: 2.2rem;
             white-space: nowrap;
             margin-left: 0.25rem;
+            gap: 0.6rem;
+        }
+
+        .nea-logo {
+            height: 2.4rem;
+            width: auto;
+            flex-shrink: 0;
         }
 
         .nav-links {
