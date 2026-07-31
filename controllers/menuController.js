@@ -10,15 +10,34 @@ exports.searchMenu = async (req, res, next) => {
   try {
     const pool = await sql.connect(dbConfig);
     const request = pool.request();
-    let sqlQuery = 'SELECT * FROM MenuItem';
+    let sqlQuery = `SELECT m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory
+      FROM dbo.MenuItem m`;
 
     if (q && q.trim() !== '') {
       request.input('SearchQuery', sql.VarChar, `%${q}%`);
-      sqlQuery += ' WHERE ItemDesc LIKE @SearchQuery OR ItemCategory LIKE @SearchQuery OR ItemCode LIKE @SearchQuery';
+      sqlQuery += ' WHERE m.ItemDesc LIKE @SearchQuery OR m.ItemCategory LIKE @SearchQuery OR m.ItemCode LIKE @SearchQuery';
     }
 
     const result = await request.query(sqlQuery);
-    res.status(200).json(result.recordset);
+    const items = [];
+
+    for (const item of result.recordset) {
+      let stallName = item.StallName || null;
+      if (!stallName && item.StallID) {
+        const stallResult = await pool.request()
+          .input('StallID', sql.Char(10), item.StallID)
+          .query('SELECT StallName FROM dbo.FoodStall WHERE StallID = @StallID');
+        stallName = stallResult.recordset[0]?.StallName || null;
+      }
+
+      items.push({
+        ...item,
+        StallName: stallName,
+        stallName
+      });
+    }
+
+    res.status(200).json(items);
   } catch (err) {
     next(err);
   }
@@ -167,9 +186,25 @@ exports.getMenuByStall = async (req, res, next) => {
         const pool = await sql.connect(dbConfig);
         const result = await pool.request()
             .input("StallID", sql.Char(10), stall_id)
-            .query("SELECT * FROM dbo.MenuItem WHERE StallID = @StallID");
+            .query(`SELECT m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory
+                FROM dbo.MenuItem m
+                WHERE m.StallID = @StallID`);
 
-        res.status(200).json(result.recordset);
+        const items = [];
+        for (const item of result.recordset) {
+            const stallResult = await pool.request()
+                .input('StallID', sql.Char(10), item.StallID)
+                .query('SELECT StallName FROM dbo.FoodStall WHERE StallID = @StallID');
+            const stallName = stallResult.recordset[0]?.StallName || null;
+
+            items.push({
+                ...item,
+                StallName: stallName,
+                stallName
+            });
+        }
+
+        res.status(200).json(items);
     } catch (err) {
         next(err);
     }
