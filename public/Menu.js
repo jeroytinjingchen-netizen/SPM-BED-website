@@ -604,19 +604,19 @@ function renderCartPage() {
 
     emptyCart.classList.add("hidden");
     cartItemsContainer.innerHTML = cartItems.map(item => `
-        <div class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h3 class="font-semibold text-gray-900">${item.name}</h3>
-                <p class="text-sm text-gray-500">${item.category}</p>
+        <div class="cart-item-card">
+            <div class="cart-item-details">
+                <h3 class="cart-item-name">${item.name}</h3>
+                <p class="cart-item-category">${item.category}</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center rounded-full border border-gray-300 bg-white">
-                    <button onclick="changeCartQuantity(${item.id}, -1)" class="px-2.5 py-1.5 text-xl font-semibold text-gray-700 hover:text-indigo-600" aria-label="Decrease quantity">-</button>
-                    <span class="min-w-9 text-center text-base font-semibold text-gray-900">${item.quantity}</span>
-                    <button onclick="changeCartQuantity(${item.id}, 1)" class="px-2.5 py-1.5 text-xl font-semibold text-gray-700 hover:text-indigo-600" aria-label="Increase quantity">+</button>
+            <div class="cart-item-actions">
+                <div class="cart-quantity-controls">
+                    <button onclick="changeCartQuantity(${item.id}, -1)" aria-label="Decrease quantity">-</button>
+                    <span class="cart-quantity-count">${item.quantity}</span>
+                    <button onclick="changeCartQuantity(${item.id}, 1)" aria-label="Increase quantity">+</button>
                 </div>
-                <span class="text-sm font-semibold text-indigo-600">$${(item.price * item.quantity).toFixed(2)}</span>
-                <button onclick="removeCartItem(${item.id})" class="rounded-full bg-red-500 px-3 py-1.5 text-base font-semibold text-white hover:bg-red-600" aria-label="Remove item">×</button>
+                <span class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+                <button onclick="removeCartItem(${item.id})" class="cart-item-remove" aria-label="Remove item">×</button>
             </div>
         </div>
     `).join("");
