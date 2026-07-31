@@ -83,6 +83,7 @@ async function fetchMenuItemsFromBackend() {
         id: item.id || item.MenuItemID || index + 1,
 
         stallID: item.stallID || item.StallID,
+    stallName: item.stallName || item.StallName || item.stall_name || item.StallName || null,
         itemCode: item.itemCode || item.ItemCode,
 
         name: item.name || item.ItemDesc,
@@ -256,7 +257,7 @@ function renderMenu() {
                 </div>
                 <h3 class="menu-card-title" style="${!item.available ? 'text-decoration: line-through; color: #6b7280;' : ''}">${item.name}</h3>
                 <p class="menu-card-description">${item.description}</p>
-                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${item.stallID || item.raw?.StallID || item.StallID || ''}</p>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${item.stallName ? `${item.stallName} (${item.stallID || item.raw?.StallID || item.StallID || ''})` : (item.stallID || item.raw?.StallID || item.StallID || '')}</p>
             </div>
             <div class="menu-card-footer">
                 <div class="menu-card-footer-row">
