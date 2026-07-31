@@ -5,6 +5,7 @@ let currentStall = "ALL";
 let searchQuery = "";
 let cartItems = [];
 let cartCount = 0;
+let showSpecialsOnly = false; // THE MISSING VARIABLE!
 
 function loadCart() {
     const savedCart = localStorage.getItem("hawkerhub-cart");
@@ -78,28 +79,32 @@ async function fetchMenuItemsFromBackend() {
     ? data
     : (data.items || data.menuItems || []);
 
-menuItems = backendItems.map((item, index) => ({
-    id: item.id || item.MenuItemID || index + 1,
+    menuItems = backendItems.map((item, index) => ({
+        id: item.id || item.MenuItemID || index + 1,
 
-    stallID: item.stallID || item.StallID,
-    itemCode: item.itemCode || item.ItemCode,
+        stallID: item.stallID || item.StallID,
+        itemCode: item.itemCode || item.ItemCode,
 
-    name: item.name || item.ItemDesc,
-    category: item.category || item.ItemCategory,
-    price: Number(item.price || item.ItemPrice),
+        name: item.name || item.ItemDesc,
+        category: item.category || item.ItemCategory,
+        price: Number(item.price || item.ItemPrice),
 
-    description:
-        item.description ||
-        item.ItemDescription ||
-        item.ItemDesc,
+        description:
+            item.description ||
+            item.ItemDescription ||
+            item.ItemDesc,
 
-    available:
-        item.available !== undefined
-            ? item.available
-            : item.Available !== undefined
-                ? item.Available
-                : true
-}));
+        available:
+            item.IsAvailable !== undefined
+                ? item.IsAvailable
+                : item.available !== undefined
+                    ? item.available
+                    : item.Available !== undefined
+                        ? item.Available
+                        : true,
+                        
+        isSpecial: item.IsSpecial === true || item.IsSpecial === 1
+    }));
     } catch (error) {
         console.error("Error fetching menu items from database:", error);
     }
@@ -107,7 +112,7 @@ menuItems = backendItems.map((item, index) => ({
 
 // 2. FEATURE 1: Fetch Menu Items by Specific Hawker Stall
 async function filterByStall(stallId) {
-    selectedStall = stallId;
+    currentStall = stallId;
 
     if (stallId === "ALL") {
         await fetchMenuItemsFromBackend();
@@ -129,6 +134,7 @@ async function filterByStall(stallId) {
         }
     }
 }
+
 // Navigation View Engine (Handles opening standard standalone page views)
 function navigateTo(viewId) {
     // Hide all existing view templates 
@@ -163,9 +169,21 @@ function filterCategory(category) {
     renderMenu();
 }
 
-// Stall Filter Function
-function filterByStall(stallId) {
-    currentStall = stallId;
+// THE MISSING TOGGLE FUNCTION
+function toggleSpecials() {
+    showSpecialsOnly = !showSpecialsOnly;
+    const btn = document.getElementById("special-btn");
+    
+    if (showSpecialsOnly) {
+        btn.style.backgroundColor = "#fbbf24"; 
+        btn.style.color = "#92400e"; 
+        btn.textContent = "🔙 View All Items";
+    } else {
+        btn.style.backgroundColor = "#d9381e"; 
+        btn.style.color = "white";
+        btn.textContent = "⭐ View Daily Specials";
+    }
+    
     renderMenu();
 }
 
@@ -190,7 +208,11 @@ function renderMenu() {
         const matchesStall = currentStall === "ALL" || stallId === currentStall;
         const matchesSearch = (item.name || item.ItemDesc || "").toLowerCase().includes(searchQuery) || 
                               (item.description || item.ItemDescription || "").toLowerCase().includes(searchQuery);
-        return matchesCategory && matchesStall && matchesSearch;
+        
+        // Check if the item is a special (if the toggle is active)
+        const matchesSpecial = showSpecialsOnly ? item.isSpecial : true;
+
+        return matchesCategory && matchesStall && matchesSearch && matchesSpecial;
     });
 
     // Write metric text content
@@ -212,15 +234,27 @@ function renderMenu() {
         const card = document.createElement("div");
         card.className = "menu-card";
         
+        // Dim the card slightly if it is out of stock
+        if (!item.available) {
+            card.style.opacity = "0.65";
+            card.style.filter = "grayscale(40%)";
+        }
+
+        // Create Daily Special Badge HTML
+        const specialBadge = item.isSpecial ? 
+            `<span style="background-color: #fef08a; color: #92400e; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 9999px; margin-left: 0.5rem; vertical-align: middle;">⭐ SPECIAL</span>` : '';
+
         card.innerHTML = `
             <div class="menu-card-body">
                 <div class="menu-card-meta">
-                    <span class="menu-card-category">${item.category}</span>
+                    <div>
+                        <span class="menu-card-category">${item.category}</span>${specialBadge}
+                    </div>
                     <span class="menu-card-status ${item.available ? 'available' : 'out-of-stock'}">
                         ${item.available ? 'In Stock' : 'Out of Stock'}
                     </span>
                 </div>
-                <h3 class="menu-card-title">${item.name}</h3>
+                <h3 class="menu-card-title" style="${!item.available ? 'text-decoration: line-through; color: #6b7280;' : ''}">${item.name}</h3>
                 <p class="menu-card-description">${item.description}</p>
                 <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${item.stallID || item.raw?.StallID || item.StallID || ''}</p>
             </div>
@@ -235,8 +269,9 @@ function renderMenu() {
                     <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
                         View Details
                     </button>
-                    <button onclick="addToCart(${item.id})" class="menu-card-button">
-                        Add to Cart
+                    <!-- Disable cart button if out of stock -->
+                    <button onclick="addToCart(${item.id})" class="menu-card-button" ${!item.available ? 'disabled style="background:#ccc; cursor:not-allowed;"' : ''}>
+                        ${item.available ? 'Add to Cart' : 'Sold Out'}
                     </button>
                 </div>
             </div>
@@ -244,8 +279,6 @@ function renderMenu() {
         grid.appendChild(card);
     });
 }
-
-
 
 async function toggleHeart(button, stallID, itemCode) {
     const savedAuth = localStorage.getItem("hawkerhub-auth");
@@ -324,7 +357,6 @@ async function toggleHeart(button, stallID, itemCode) {
         button.disabled = false;
     }
 }
-
 
 function updateCartButton() {
     const cartCountEl = document.getElementById("cart-count");
@@ -557,152 +589,4 @@ function openItemDetailsPage(id) {
     }
 
     navigateTo('details-view');
-}
-
-// ===============================
-// LIKE BUTTON
-// ===============================
-async function toggleHeart(button, stallID, itemCode) {
-    const savedAuth = localStorage.getItem("hawkerhub-auth");
-
-    if (!savedAuth) {
-        alert("Please log in first.");
-        window.location.href = "Index.html";
-        return;
-    }
-
-    let authData;
-
-    try {
-        authData = JSON.parse(savedAuth);
-    } catch (error) {
-        console.error("Invalid login data:", error);
-        alert("Login information is invalid. Please log in again.");
-        return;
-    }
-
-    const token = authData.token;
-    const customer = authData.customer;
-    const customerID = customer.customerId;
-
-    if (!token || !customerID) {
-        alert("Token or Customer ID is missing. Please log in again.");
-        return;
-    }
-
-    try {
-        const response = await fetch("/api/likes/toggle", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                customerID: customerID,
-                stallID: stallID,
-                itemCode: itemCode
-            })
-        });
-
-        const result = await response.json();
-
-        console.log("Like result:", result);
-
-        if (!response.ok) {
-            throw new Error(result.message || "Unable to update favourite.");
-        }
-
-        if (result.liked === true) {
-            button.textContent = "❤️";
-            button.classList.add("liked");
-        } else {
-            button.textContent = "🤍";
-            button.classList.remove("liked");
-        }
-
-    } catch (error) {
-        console.error("Like error:", error);
-        alert(error.message);
-    }
-}
-
-// ===============================
-// LIKE BUTTON
-// ===============================
-async function toggleHeart(button, stallID, itemCode) {
-    const savedAuth = localStorage.getItem("hawkerhub-auth");
-
-    if (!savedAuth) {
-        alert("Please log in first.");
-        window.location.href = "Index.html";
-        return;
-    }
-
-    let authData;
-
-    try {
-        authData = JSON.parse(savedAuth);
-    } catch (error) {
-        console.error("Invalid login information:", error);
-        alert("Login information is invalid. Please log in again.");
-        return;
-    }
-
-    const token = authData.token;
-    const customer = authData.customer;
-    const customerID = customer.customerId;
-
-    if (!token) {
-        alert("Login token is missing.");
-        return;
-    }
-
-    if (!customerID) {
-        alert("Customer ID is missing.");
-        console.log("Saved auth data:", authData);
-        return;
-    }
-
-    button.disabled = true;
-
-    try {
-        const response = await fetch("/api/likes/toggle", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                customerID: customerID,
-                stallID: stallID,
-                itemCode: itemCode
-            })
-        });
-
-        const result = await response.json();
-
-        console.log("Like response:", result);
-
-        if (!response.ok) {
-            throw new Error(
-                result.message ||
-                result.error ||
-                "Unable to update favourite."
-            );
-        }
-
-        if (result.liked === true) {
-            button.textContent = "❤️";
-            button.classList.add("liked");
-        } else {
-            button.textContent = "🤍";
-            button.classList.remove("liked");
-        }
-
-    } catch (error) {
-        console.error("Like error:", error);
-        alert(error.message);
-    } finally {
-        button.disabled = false;
-    }
 }

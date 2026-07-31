@@ -232,7 +232,6 @@ async function toggleStock(itemCode) {
 // ==========================================
 async function loadVendorIdentity() {
     try {
-        // TEMPORARY: Hardcode an owner ID that exists in your database to test
         const mockOwnerId = "OWN000001"; // Update this to a real ID from your DB!
         
         const response = await fetch(`/owners/${mockOwnerId}`);
