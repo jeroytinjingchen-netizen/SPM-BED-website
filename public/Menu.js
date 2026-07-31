@@ -134,6 +134,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Initial draw phase
+    renderMenu();
     updateCartButton();
     renderCartPage();
 
@@ -143,6 +144,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             cartItems = [];
             saveCart();
         });
+    }
+
+    const checkoutButton = document.getElementById("checkout-button");
+    if (checkoutButton) {
+        checkoutButton.addEventListener("click", checkoutCart);
     }
     
     // Wire Search Input Field Text Events
@@ -272,10 +278,19 @@ function renderMenu() {
     
     // Evaluation Pipeline Filter
     const filtered = menuItems.filter(item => {
-        const matchesCategory = currentCategory === "All" || item.category === currentCategory;
-        const matchesStall = currentStall === "ALL" || item.raw?.StallID === currentStall;
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery) || 
-                              item.description.toLowerCase().includes(searchQuery);
+        const stallId = item.stallID || item.raw?.StallID || item.StallID;
+        const itemCategory = (item.category || item.ItemCategory || item.itemCategory || "").toString().toLowerCase();
+        const selectedCategory = currentCategory.toLowerCase();
+        const matchesCategory =
+            currentCategory === "All" ||
+            itemCategory === selectedCategory ||
+            (selectedCategory === "mains" && (itemCategory === "main" || itemCategory === "mains")) ||
+            (selectedCategory === "sides" && (itemCategory === "side" || itemCategory === "sides" || itemCategory === "snacks" || itemCategory === "snack")) ||
+            (selectedCategory === "beverages" && (itemCategory === "drink" || itemCategory === "drinks" || itemCategory === "beverages")) ||
+            (selectedCategory === "desserts" && (itemCategory === "dessert" || itemCategory === "desserts"));
+        const matchesStall = currentStall === "ALL" || stallId === currentStall;
+        const matchesSearch = (item.name || item.ItemDesc || "").toLowerCase().includes(searchQuery) || 
+                              (item.description || item.ItemDescription || "").toLowerCase().includes(searchQuery);
         return matchesCategory && matchesStall && matchesSearch;
     });
 
@@ -308,30 +323,22 @@ function renderMenu() {
                 </div>
                 <h3 class="menu-card-title">${item.name}</h3>
                 <p class="menu-card-description">${item.description}</p>
-                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${getStallName(item.raw?.StallID || 'Unknown')}</p>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${getStallName(item.stallID || item.raw?.StallID || item.StallID || 'Unknown')}</p>
             </div>
             <div class="menu-card-footer">
-                <span class="menu-card-price">$${item.price.toFixed(2)}</span>
-                <div class="menu-card-actions">
-                   <div class="menu-card-actions">
-
-        <div class="menu-card-actions">
-
-    <button
-    class="heart-btn"
-    onclick="toggleHeart(this, '${item.stallID}', '${item.itemCode}')">
-    🤍
-</button>
-
-    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
-        View Details
-    </button>
-
-    <button onclick="addToCart(${item.id})" class="menu-card-button">
-        Add to Cart
-    </button>
-
-</div>
+                <div class="menu-card-footer-row">
+                    <span class="menu-card-price">$${item.price.toFixed(2)}</span>
+                    <button class="heart-btn" onclick="toggleHeart(this, '${item.stallID}', '${item.itemCode}')">
+                        🤍
+                    </button>
+                </div>
+                <div class="menu-card-footer-row menu-card-footer-actions">
+                    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
+                        View Details
+                    </button>
+                    <button onclick="addToCart(${item.id})" class="menu-card-button">
+                        Add to Cart
+                    </button>
                 </div>
             </div>
         `;
@@ -427,7 +434,17 @@ function updateCartButton() {
     }
 }
 
-function addToCart(id) {
+function getStoredAuthData() {
+    try {
+        const savedAuth = localStorage.getItem("hawkerhub-auth");
+        return savedAuth ? JSON.parse(savedAuth) : null;
+    } catch (error) {
+        console.error("Invalid auth data:", error);
+        return null;
+    }
+}
+
+async function addToCart(id) {
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
 
@@ -439,6 +456,36 @@ function addToCart(id) {
     }
 
     saveCart();
+
+    const authData = getStoredAuthData();
+    const token = authData?.token;
+    const customerId = authData?.customer?.customerId || authData?.customer?.CustomerID || authData?.customer?.customerID;
+
+    if (token && customerId) {
+        try {
+            const response = await fetch("/api/cart/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    StallID: item.stallID || item.StallID,
+                    ItemCode: item.itemCode || item.ItemCode,
+                    Quantity: 1,
+                    UnitPrice: Number(item.price || item.UnitPrice || 0)
+                })
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(result.error || result.message || "Unable to sync item to cart.");
+            }
+        } catch (error) {
+            console.error("Cart sync error:", error);
+        }
+    }
+
     alert(`${item.name} has been added to the cart.`);
 }
 
@@ -453,6 +500,77 @@ function changeCartQuantity(id, delta) {
     saveCart();
 }
 
+async function checkoutCart() {
+    if (cartItems.length === 0) {
+        alert("Your cart is empty.");
+        return;
+    }
+
+    const savedAuth = localStorage.getItem("hawkerhub-auth");
+    if (!savedAuth) {
+        alert("Please log in before checking out.");
+        window.location.href = "Index.html";
+        return;
+    }
+
+    let authData;
+    try {
+        authData = JSON.parse(savedAuth);
+    } catch (error) {
+        console.error("Invalid auth data:", error);
+        alert("Your session is invalid. Please log in again.");
+        return;
+    }
+
+    const token = authData.token;
+    const customerId = authData.customer?.customerId || authData.customer?.CustomerID || authData.customer?.customerID;
+
+    if (!token || !customerId) {
+        alert("Your session is incomplete. Please log in again.");
+        return;
+    }
+
+    try {
+        const cartResponse = await fetch("/api/cart", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const cartPayload = await cartResponse.json().catch(() => ({}));
+        if (!cartResponse.ok) {
+            throw new Error(cartPayload.error || cartPayload.message || "Unable to prepare cart for checkout.");
+        }
+
+        const cartId = cartPayload.cart?.CartID || cartPayload.cart?.CartId;
+        if (!cartId) {
+            throw new Error("No cart was created for this account.");
+        }
+
+        localStorage.setItem("hawkerhub-cart-id", cartId);
+
+        const checkoutResponse = await fetch("/api/cart/checkout", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ cartId, customerId, paymentType: "Cash" })
+        });
+
+        const checkoutPayload = await checkoutResponse.json().catch(() => ({}));
+        if (!checkoutResponse.ok) {
+            throw new Error(checkoutPayload.error || checkoutPayload.message || "Checkout failed.");
+        }
+    } catch (error) {
+        console.error("Checkout error:", error);
+        alert(error.message || "Checkout failed. Please try again.");
+    }
+
+    cartItems = [];
+    saveCart();
+    window.location.href = "order-placed.html";
+}
 
 function removeCartItem(id) {
     cartItems = cartItems.filter(cartItem => cartItem.id !== id);

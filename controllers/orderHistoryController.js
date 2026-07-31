@@ -2,8 +2,8 @@ const orderHistoryModel = require('../models/orderHistoryModel');
 
 function buildOrderHistory(orderRow) {
   const items = (orderRow.items || []).map((item) => ({
-    code: item.ItemCode || item.code,
-    name: item.ItemDesc || item.name || item.ItemCode || item.code,
+    code: item.ItemCode || item.code || item.itemCode,
+    name: item.ItemDesc || item.name || item.itemName || item.ItemCode || item.code || item.itemCode,
     quantity: Number(item.Quantity || item.quantity || 0),
     unitPrice: Number(item.UnitPrice || item.unitPrice || 0),
     lineTotal: Number(item.Quantity || item.quantity || 0) * Number(item.UnitPrice || item.unitPrice || 0)
@@ -25,24 +25,27 @@ function normalizeOrderRows(rows) {
   const grouped = new Map();
 
   rows.forEach((row) => {
-    if (!row.OrderID) return;
+    if (!row.OrderID && !row.orderId) return;
 
-    if (!grouped.has(row.OrderID)) {
-      grouped.set(row.OrderID, {
-        OrderID: row.OrderID,
-        OrderDate: row.OrderDate,
-        PmtType: row.PmtType,
+    const orderId = row.OrderID || row.orderId;
+
+    if (!grouped.has(orderId)) {
+      grouped.set(orderId, {
+        OrderID: orderId,
+        OrderDate: row.OrderDate || row.orderDate,
+        PmtType: row.PmtType || row.paymentMethod || row.pmtType,
         items: []
       });
     }
 
-    const bucket = grouped.get(row.OrderID);
-    if (row.ItemCode) {
+    const bucket = grouped.get(orderId);
+    const itemCode = row.ItemCode || row.itemCode || row.code;
+    if (itemCode) {
       bucket.items.push({
-        ItemCode: row.ItemCode,
-        Quantity: row.Quantity,
-        UnitPrice: row.UnitPrice,
-        ItemDesc: row.ItemDesc || row.ItemCode
+        ItemCode: itemCode,
+        Quantity: row.Quantity || row.quantity || 0,
+        UnitPrice: row.UnitPrice || row.unitPrice || 0,
+        ItemDesc: row.ItemDesc || row.itemName || row.name || itemCode
       });
     }
   });

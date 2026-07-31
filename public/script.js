@@ -309,8 +309,6 @@ function updateNavigationUI(isLoggedIn) {
         `;
     } else {
         menu.innerHTML = `
-            <li><a onclick="navigateTo('landing-view')">Home</a></li>
-            <li><a href="Menu.html" class="btn-primary">Menu</a></li>
             <li><a onclick="navigateTo('login-view')">Log In</a></li>
             <li><a onclick="navigateTo('register-view')" class="btn-primary">Register</a></li>
         `;
