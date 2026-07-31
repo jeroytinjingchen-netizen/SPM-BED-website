@@ -42,7 +42,7 @@ if (!customerID) {
 }
 
 const response = await fetch(
-    `/api/likes/${encodeURIComponent(customerID)}`,
+    `/api/customers/${encodeURIComponent(customerID)}/likes`,
     {
         method: "GET",
         headers: {
