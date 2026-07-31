@@ -6,34 +6,6 @@ let searchQuery = "";
 let cartItems = [];
 let cartCount = 0;
 
-// Stall name mapping
-const stallNames = {
-    "STL0000001": "Ali Nasi Lemak (#01-01)",
-    "STL0000002": "Ben Chicken Rice (#01-02)",
-    "STL0000003": "Chloe Western (#02-01)",
-    "STL0000004": "Aisha Briyani (#02-02)",
-    "STL0000005": "Daniel Ramen (#03-01)",
-    "STL0000006": "Farah Desserts (#03-02)",
-    "STL0000007": "Kumar Curry (#03-03)",
-    "STL0000008": "Nur Noodles (#04-01)",
-    "STL0000009": "Rahim Rice (#04-02)",
-    "STL0000010": "Mei Ling Veg (#04-03)",
-    "STL0000011": "Jason Burgers (#05-01)",
-    "STL0000012": "Siti Satay (#05-02)",
-    "STL0000013": "Ahmad Soup (#05-03)",
-    "STL0000014": "Priya Indian (#06-01)",
-    "STL0000015": "Arjun Tandoori (#06-02)",
-    "STL0000016": "Wei Jian Noodles (#06-03)",
-    "STL0000017": "Hannah Salad (#07-01)",
-    "STL0000018": "Irfan Fried (#07-02)",
-    "STL0000019": "Nabila Cake (#07-03)",
-    "STL0000020": "Ryan Ribs (#08-01)"
-};
-
-function getStallName(stallId) {
-    return stallNames[stallId] || stallId;
-}
-
 function loadCart() {
     const savedCart = localStorage.getItem("hawkerhub-cart");
     if (savedCart) {
@@ -250,7 +222,7 @@ function renderMenu() {
                 </div>
                 <h3 class="menu-card-title">${item.name}</h3>
                 <p class="menu-card-description">${item.description}</p>
-                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${getStallName(item.stallID || item.raw?.StallID || item.StallID || 'Unknown')}</p>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${item.stallID || item.raw?.StallID || item.StallID || ''}</p>
             </div>
             <div class="menu-card-footer">
                 <div class="menu-card-footer-row">
