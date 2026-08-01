@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HawkerHub - Vendor Portal</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="navbar">
+
+            <div class="navbar-left">
+                <div class="navbar-back-spacer" aria-hidden="true"></div>
+                <div class="navbar-center">
+                    <a class="logo" href="vendor-login.html">
+                        <img src="nea-logo.webp" alt="National Environment Agency logo" class="nea-logo">
+                        SG Hawker Management - Vendor Portal
+                    </a>
+                </div>
+            </div>
+
+            <ul class="nav-links" id="nav-menu">
+
+                <li>
+                    <a onclick="navigateTo('vendor-login-view')">Log In</a>
+                </li>
+
+                <li>
+                    <a onclick="navigateTo('vendor-register-view')" class="btn-primary">
+                        Register
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    </header>
+
+
+    <!-- VIEW 1: LANDING PAGE -->
+    <main id="vendor-landing-view" class="view active">
+
+        <section class="hero">
+
+            <h1>Run Your Stall, Digitally</h1>
+
+            <p>
+                Sign in to update your menu, mark items in or out of stock,
+                and manage your stall listing on the SG Hawker Centre
+                platform.
+            </p>
+
+            <div style="
+                    display: flex;
+                    gap: 1rem;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                ">
+                <button class="btn-primary" style="
+                        border: none;
+                        font-size: 1.1rem;
+                        cursor: pointer;
+                    " onclick="navigateTo('vendor-login-view')">
+                    Vendor Log In
+                </button>
+
+                <button class="btn-danger" style="font-size: 1.1rem;" onclick="navigateTo('vendor-register-view')">
+                    New Vendor? Register
+                </button>
+            </div>
+
+        </section>
+
+        <section class="features-grid">
+
+            <div class="feature-card">
+                <h3>Manage Your Menu</h3>
+                <p>
+                    Add new dishes, update prices, and mark daily specials
+                    in seconds.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Track Availability</h3>
+                <p>
+                    Toggle items in and out of stock so customers always see
+                    an accurate menu.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Own Your Profile</h3>
+                <p>
+                    Keep your contact details up to date so the platform
+                    and your customers can reach you.
+                </p>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- VIEW 2: VENDOR REGISTRATION -->
+    <section id="vendor-register-view" class="view">
+
+        <div class="form-container">
+
+            <h2>Register as a Vendor</h2>
+
+            <div id="vendor-register-alert" class="alert"></div>
+
+            <form id="vendor-register-form" onsubmit="handleVendorRegistration(event)">
+
+                <div class="form-group">
+                    <label for="vreg-name">Full Name</label>
+                    <input type="text" id="vreg-name" required placeholder="Enter full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="vreg-email">Email Address</label>
+                    <input type="email" id="vreg-email" required placeholder="name@domain.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="vreg-nric">NRIC</label>
+                    <input type="text" id="vreg-nric" required placeholder="e.g. S1234567A" maxlength="9">
+                </div>
+
+                <div class="form-group">
+                    <label for="vreg-contact">Contact Number</label>
+                    <input type="text" id="vreg-contact" required placeholder="e.g. 9123456789" maxlength="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="vreg-password">Password</label>
+                    <input type="password" id="vreg-password" required minlength="8" placeholder="Minimum 8 characters">
+                </div>
+
+                <div class="form-group">
+                    <label for="vreg-confirm">Confirm Password</label>
+                    <input type="password" id="vreg-confirm" required minlength="8" placeholder="Repeat password">
+                </div>
+
+                <button type="submit">Register</button>
+
+            </form>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.9rem; color:#666;">
+                Already registered?
+                <a onclick="navigateTo('vendor-login-view')" style="color: var(--primary-color); cursor:pointer; font-weight:600;">Log in here</a>
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- VIEW 3: VENDOR LOGIN -->
+    <section id="vendor-login-view" class="view">
+
+        <div class="form-container">
+
+            <h2>Vendor Log In</h2>
+
+            <div id="vendor-login-alert" class="alert"></div>
+
+            <form id="vendor-login-form" onsubmit="handleVendorLogin(event)">
+
+                <div class="form-group">
+                    <label for="vlogin-email">Email Address</label>
+                    <input type="email" id="vlogin-email" required placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="vlogin-password">Password</label>
+                    <input type="password" id="vlogin-password" required placeholder="Enter your password">
+                </div>
+
+                <button type="submit">Log In</button>
+
+            </form>
+
+            <p style="text-align:center; margin-top:1rem; font-size:0.9rem; color:#666;">
+                New vendor?
+                <a onclick="navigateTo('vendor-register-view')" style="color: var(--primary-color); cursor:pointer; font-weight:600;">Register here</a>
+            </p>
+
+        </div>
+
+    </section>
+
+    <!-- JavaScript -->
+    <script src="vendor-auth.js"></script>
+
+</body>
+
+</html>

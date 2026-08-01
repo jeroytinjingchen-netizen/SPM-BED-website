@@ -4,9 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Singapore Hawker Centre Management System</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -15,7 +13,6 @@
     <!-- Navigation Bar -->
     <header>
         <nav class="navbar">
-
             <div class="navbar-left">
                 <div class="navbar-back-spacer" aria-hidden="true"></div>
                 <div class="navbar-center">
@@ -27,17 +24,19 @@
             </div>
 
             <ul class="nav-links" id="nav-menu">
-
                 <li>
-                    <a onclick="navigateTo('login-view')">Log In</a>
+                    <a onclick="navigateTo('login-view')">Customer Log In</a>
                 </li>
-
                 <li>
                     <a onclick="navigateTo('register-view')" class="btn-primary">
-                        Register
+                        Customer Sign Up
                     </a>
                 </li>
-
+                <li>
+                    <a href="vendor-login.html" class="btn-danger" style="padding: 0.45rem 1rem; font-size: 0.9rem;">
+                        Vendor Portal &rarr;
+                    </a>
+                </li>
             </ul>
         </nav>
     </header>
@@ -47,190 +46,153 @@
     <main id="landing-view" class="view active">
 
         <section class="hero">
-
             <h1>Singapore Hawker Centre Operations</h1>
-
             <p>
                 Empowering local operators, vendors, and National Environment
                 Agency officers to manage profiles, metrics, stalls, and
                 compliance tracking details seamlessly.
             </p>
 
-            <div style="
-                    display: flex;
-                    gap: 1rem;
-                    justify-content: center;
-                    flex-wrap: wrap;
-                ">
-                <button class="btn-primary" style="
-                        border: none;
-                        font-size: 1.1rem;
-                        cursor: pointer;
-                    " onclick="navigateTo('register-view')">
-                    Get Started Now
+            <!-- Dual Choice Buttons: Clear separation between Customers and Vendors -->
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn-primary" style="border: none; font-size: 1.1rem; cursor: pointer;" 
+                        onclick="navigateTo('register-view')">
+                    Patron / Customer Sign Up
                 </button>
-
+                <a class="btn-danger" style="font-size: 1.1rem; text-decoration: none; display: inline-flex; align-items: center;" 
+                   href="vendor-login.html">
+                    Hawker Vendor Portal &rarr;
+                </a>
             </div>
-
         </section>
 
-
         <section class="features-grid">
-
             <div class="feature-card">
-
                 <h3>Vendor Stalls</h3>
-
                 <p>
                     Register profiles to manage digital menu entries,
                     promotional highlights, and rental processing updates.
                 </p>
-
             </div>
-
-
             <div class="feature-card">
-
                 <h3>Patron Engagement</h3>
-
                 <p>
                     Browse food menu options, save favourite dishes, view
                     alerts, and track order histories.
                 </p>
-
             </div>
-
-
             <div class="feature-card">
-
                 <h3>Regulatory Audits</h3>
-
                 <p>
                     NEA officers can record sanitisation scores, compliance
                     information, and historical health updates.
                 </p>
-
             </div>
-
         </section>
 
     </main>
 
 
-    <!-- VIEW 2: ACCOUNT REGISTRATION PAGE -->
+    <!-- VIEW 2: CUSTOMER ACCOUNT REGISTRATION PAGE -->
     <section id="register-view" class="view">
 
         <div class="form-container">
+            <h2>Customer Sign Up</h2>
 
-            <h2>Create Account</h2>
+            <!-- Role Guidance Banner -->
+            <div style="background-color: #fff5f2; border: 1px solid #fed7cc; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">
+                Are you a stall owner? 
+                <a href="vendor-login.html" style="color: var(--primary-color); font-weight: bold; text-decoration: underline;">
+                    Register on the Vendor Portal &rarr;
+                </a>
+            </div>
 
             <div id="register-alert" class="alert"></div>
 
             <form id="register-form" onsubmit="handleRegistration(event)">
 
                 <div class="form-group">
-
                     <label for="reg-name">Full Name</label>
-
                     <input type="text" id="reg-name" required placeholder="Enter full name">
-
                 </div>
-
 
                 <div class="form-group">
-
                     <label for="reg-email">Email Address</label>
-
                     <input type="email" id="reg-email" required placeholder="name@domain.com">
-
                 </div>
-
 
                 <div class="form-group">
                     <label for="reg-nric">NRIC</label>
                     <input type="text" id="reg-nric" required placeholder="e.g. S1234567A" maxlength="9">
                 </div>
+
                 <div class="form-group">
                     <label for="reg-contact">Contact Number</label>
                     <input type="text" id="reg-contact" required placeholder="e.g. 91234567" maxlength="15">
                 </div>
-                <div class="form-group">
 
-                    <label for="reg-role">Account Type</label>
-
-                    <select id="reg-role" required>
-
-                        <option value="Patron">
-                            Patron / Customer
-                        </option>
-
-                        <option value="Vendor">
-                            Hawker Stall Vendor
-                        </option>
-
-                    </select>
-
-                </div>
-
+                <!-- Hidden select to keep script.js compatibility without confusing the user -->
+                <input type="hidden" id="reg-role" value="Patron">
 
                 <div class="form-group">
-
                     <label for="reg-password">Password</label>
-
                     <input type="password" id="reg-password" required minlength="8" placeholder="Minimum 8 characters">
-
                 </div>
-
 
                 <div class="form-group">
-
                     <label for="reg-confirm">Confirm Password</label>
-
                     <input type="password" id="reg-confirm" required minlength="8" placeholder="Repeat password">
-
                 </div>
 
-                <button type="submit">Sign Up</button>
+                <button type="submit">Create Customer Account</button>
 
             </form>
 
+            <p style="text-align:center; margin-top:1rem; font-size:0.9rem; color:#666;">
+                Already have a customer account?
+                <a onclick="navigateTo('login-view')" style="color: var(--primary-color); cursor:pointer; font-weight:600;">Log in here</a>
+            </p>
         </div>
 
     </section>
 
 
-    <!-- VIEW 3: LOGIN PAGE -->
+    <!-- VIEW 3: CUSTOMER LOGIN PAGE -->
     <section id="login-view" class="view">
 
         <div class="form-container">
+            <h2>Customer Log In</h2>
 
-            <h2>Account Login</h2>
+            <!-- Role Guidance Banner -->
+            <div style="background-color: #fff5f2; border: 1px solid #fed7cc; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">
+                Stall owner or operator? 
+                <a href="vendor-login.html" style="color: var(--primary-color); font-weight: bold; text-decoration: underline;">
+                    Log in to the Vendor Portal &rarr;
+                </a>
+            </div>
 
             <div id="login-alert" class="alert"></div>
 
             <form id="login-form" onsubmit="handleLogin(event)">
 
                 <div class="form-group">
-
                     <label for="login-email">Email Address</label>
-
                     <input type="email" id="login-email" required placeholder="Enter your email">
-
                 </div>
 
-
                 <div class="form-group">
-
                     <label for="login-password">Password</label>
-
                     <input type="password" id="login-password" required placeholder="Enter your password">
-
                 </div>
 
                 <button type="submit">Log In</button>
 
             </form>
 
+            <p style="text-align:center; margin-top:1rem; font-size:0.9rem; color:#666;">
+                New customer?
+                <a onclick="navigateTo('register-view')" style="color: var(--primary-color); cursor:pointer; font-weight:600;">Register here</a>
+            </p>
         </div>
 
     </section>

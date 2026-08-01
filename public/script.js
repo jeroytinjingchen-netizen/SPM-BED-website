@@ -38,11 +38,33 @@ function navigateTo(viewId) {
     window.scrollTo(0, 0);
 }
 
+// Selecting "Hawker Stall Vendor" here doesn't register a vendor - this
+// form only ever calls /api/customers/register. Redirect them to the real
+// vendor registration flow instead of letting them submit and end up with
+// an unwanted Customer row.
+function handleAccountTypeChange(select) {
+    const note = document.getElementById('vendor-redirect-note');
+    const submitBtn = document.querySelector('#register-form button[type="submit"]');
+    if (!note) return;
+
+    const isVendor = select.value === 'Vendor';
+    note.style.display = isVendor ? 'block' : 'none';
+    if (submitBtn) submitBtn.disabled = isVendor;
+}
+
 // Account Registration Handler Engine (POST /api/customers/register)
 async function handleRegistration(e) {
     e.preventDefault();
     const alertBox = document.getElementById('register-alert');
     if (alertBox) alertBox.style.display = "none";
+
+    // Safety net in case the button ever gets re-enabled some other way -
+    // this form must never silently create a Customer row for a Vendor pick.
+    const accountType = document.getElementById('reg-role').value;
+    if (accountType === 'Vendor') {
+        window.location.href = 'vendor-login.html';
+        return;
+    }
 
     const custName = document.getElementById('reg-name').value.trim();
     const custEmail = document.getElementById('reg-email').value.trim().toLowerCase();
