@@ -210,29 +210,10 @@ async function fetchMenuItemsFromBackend() {
     }
 }
 
-// 2. FEATURE 1: Fetch Menu Items by Specific Hawker Stall
-async function filterByStall(stallId) {
+// ✅ Update currentStall and trigger client-side render
+function filterByStall(stallId) {
     currentStall = stallId;
-
-    if (stallId === "ALL") {
-        await fetchMenuItemsFromBackend();
-        return;
-    }
-
-    try {
-        const response = await fetch(`/api/menu/stall/${stallId}`);
-        if (!response.ok) throw new Error("Failed to fetch stall menu items.");
-
-        const data = await response.json();
-        menuItems = Array.isArray(data) ? data : [];
-        renderMenu();
-    } catch (error) {
-        console.error("Error fetching menu items from BED:", error);
-        const itemCountEl = document.getElementById("item-count");
-        if (itemCountEl) {
-            itemCountEl.textContent = "Error loading menu from database.";
-        }
-    }
+    renderMenu();
 }
 
 // Navigation View Engine (Handles opening standard standalone page views)
@@ -329,128 +310,55 @@ function renderMenu() {
     grid.classList.remove("hidden");
     emptyState.classList.add("hidden");
 
-    // Map Template Elements Dynamically onto View Container
-    filtered.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "menu-card";
-        
-        card.innerHTML = `
-            <div class="menu-card-body">
-                <div class="menu-card-meta">
-                    <div>
-                        <span class="menu-card-category">${item.category}</span>${specialBadge}
-                    </div>
-                    <span class="menu-card-status ${item.available ? 'available' : 'out-of-stock'}">
-                        ${item.available ? 'In Stock' : 'Out of Stock'}
-                    </span>
+// ✅ FIXED PORTION
+filtered.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "menu-card";
+    
+    // Extract & define missing variables before generating the HTML
+    const stallID = item.stallID || item.StallID || "";
+    const itemCode = item.itemCode || item.ItemCode || "";
+    const itemKey = `${stallID}-${itemCode}`;
+    const isLiked = likedItems.has(itemKey);
+    const specialBadge = item.isSpecial ? `<span class="badge-special"> ⭐ Special</span>` : "";
+
+    card.innerHTML = `
+        <div class="menu-card-body">
+            <div class="menu-card-meta">
+                <div>
+                    <span class="menu-card-category">${item.category}</span>${specialBadge}
                 </div>
-                <h3 class="menu-card-title" style="${!item.available ? 'text-decoration: line-through; color: #6b7280;' : ''}">${item.name}</h3>
-                <p class="menu-card-description">${item.description}</p>
-                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${item.stallName ? `${item.stallName} (${item.stallID || item.raw?.StallID || item.StallID || ''})` : (item.stallID || item.raw?.StallID || item.StallID || '')}</p>
+                <span class="menu-card-status ${item.available ? 'available' : 'out-of-stock'}">
+                    ${item.available ? 'In Stock' : 'Out of Stock'}
+                </span>
             </div>
-            <div class="menu-card-footer">
-                <div class="menu-card-footer-row">
-                    <span class="menu-card-price">$${item.price.toFixed(2)}</span>
-                   <button
-                class="heart-btn ${isLiked ? "liked" : ""}"
-                onclick="toggleHeart(this, '${stallID}', '${itemCode}')">
-                ${isLiked ? "❤️" : "🤍"}
+            <h3 class="menu-card-title" style="${!item.available ? 'text-decoration: line-through; color: #6b7280;' : ''}">${item.name}</h3>
+            <p class="menu-card-description">${item.description}</p>
+            <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">${item.stallName ? `${item.stallName} (${stallID})` : stallID}</p>
+        </div>
+        <div class="menu-card-footer">
+            <div class="menu-card-footer-row">
+                <span class="menu-card-price">$${item.price.toFixed(2)}</span>
+                <button
+                    class="heart-btn ${isLiked ? "liked" : ""}"
+                    onclick="toggleHeart(this, '${stallID}', '${itemCode}')">
+                    ${isLiked ? "❤️" : "🤍"}
                 </button>
-                </div>
-                <div class="menu-card-footer-row menu-card-footer-actions">
-                    <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
-                        View Details
-                    </button>
-                    <!-- Disable cart button if out of stock -->
-                    <button onclick="addToCart(${item.id})" class="menu-card-button" ${!item.available ? 'disabled style="background:#ccc; cursor:not-allowed;"' : ''}>
-                        ${item.available ? 'Add to Cart' : 'Sold Out'}
-                    </button>
-                </div>
             </div>
-        `;
-        grid.appendChild(card);
-    });
+            <div class="menu-card-footer-row menu-card-footer-actions">
+                <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
+                    View Details
+                </button>
+                <button onclick="addToCart(${item.id})" class="menu-card-button" ${!item.available ? 'disabled style="background:#ccc; cursor:not-allowed;"' : ''}>
+                    ${item.available ? 'Add to Cart' : 'Sold Out'}
+                </button>
+            </div>
+        </div>
+    `;
+    grid.appendChild(card);
+});
 }
 
-
-
-async function toggleHeart(button, stallID, itemCode) {
-    const savedAuth = localStorage.getItem("hawkerhub-auth");
-
-    if (!savedAuth) {
-        alert("Please log in first.");
-        window.location.href = "Index.html";
-        return;
-    }
-
-    let authData;
-
-    try {
-        authData = JSON.parse(savedAuth);
-    } catch (error) {
-        console.error("Invalid login information:", error);
-        alert("Login information is invalid. Please log in again.");
-        return;
-    }
-
-    const token = authData.token;
-    const customer = authData.customer;
-    const customerID = customer?.customerId;
-
-    if (!token) {
-        alert("Login token is missing.");
-        return;
-    }
-
-    if (!customerID) {
-        alert("Customer ID is missing.");
-        console.log("Saved auth data:", authData);
-        return;
-    }
-
-    button.disabled = true;
-
-    try {
-        const response = await fetch("/api/likes/toggle", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                customerID: customerID,
-                stallID: stallID,
-                itemCode: itemCode
-            })
-        });
-
-        const result = await response.json();
-
-        console.log("Like response:", result);
-
-        if (!response.ok) {
-            throw new Error(
-                result.message ||
-                result.error ||
-                "Unable to update favourite."
-            );
-        }
-
-        if (result.liked === true) {
-            button.textContent = "❤️";
-            button.classList.add("liked");
-        } else {
-            button.textContent = "🤍";
-            button.classList.remove("liked");
-        }
-
-    } catch (error) {
-        console.error("Like error:", error);
-        alert(error.message);
-    } finally {
-        button.disabled = false;
-    }
-}
 
 
 function updateCartButton() {
@@ -811,74 +719,8 @@ function openItemDetailsPage(id) {
 // LIKE BUTTON
 // ===============================
 async function toggleHeart(button, stallID, itemCode) {
-    const savedAuth = localStorage.getItem("hawkerhub-auth");
-
-    if (!savedAuth) {
-        alert("Please log in first.");
-        window.location.href = "Index.html";
-        return;
-    }
-
-    let authData;
-
-    try {
-        authData = JSON.parse(savedAuth);
-    } catch (error) {
-        console.error("Invalid login data:", error);
-        alert("Login information is invalid. Please log in again.");
-        return;
-    }
-
-    const token = authData.token;
-    const customer = authData.customer;
-    const customerID = customer.customerId;
-
-    if (!token || !customerID) {
-        alert("Token or Customer ID is missing. Please log in again.");
-        return;
-    }
-
-    try {
-        const response = await fetch("/api/likes/toggle", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                customerID: customerID,
-                stallID: stallID,
-                itemCode: itemCode
-            })
-        });
-
-        const result = await response.json();
-
-        console.log("Like result:", result);
-
-        if (!response.ok) {
-            throw new Error(result.message || "Unable to update favourite.");
-        }
-
-        if (result.liked === true) {
-            button.textContent = "❤️";
-            button.classList.add("liked");
-        } else {
-            button.textContent = "🤍";
-            button.classList.remove("liked");
-        }
-
-    } catch (error) {
-        console.error("Like error:", error);
-        alert(error.message);
-    }
-}
-
-// ===============================
-// LIKE BUTTON
-// ===============================
-async function toggleHeart(button, stallID, itemCode) {
-    const savedAuth = localStorage.getItem("hawkerhub-auth");
+    const savedAuth =
+        localStorage.getItem("hawkerhub-auth");
 
     if (!savedAuth) {
         alert("Please log in first.");
@@ -897,17 +739,14 @@ async function toggleHeart(button, stallID, itemCode) {
     }
 
     const token = authData.token;
-    const customer = authData.customer;
-    const customerID = customer.customerId;
 
-    if (!token) {
-        alert("Login token is missing.");
-        return;
-    }
+    const customerID =
+        authData.customer?.customerId ||
+        authData.customer?.customerID ||
+        authData.customer?.CustomerID;
 
-    if (!customerID) {
-        alert("Customer ID is missing.");
-        console.log("Saved auth data:", authData);
+    if (!token || !customerID) {
+        alert("Token or Customer ID is missing. Please log in again.");
         return;
     }
 
@@ -921,15 +760,14 @@ async function toggleHeart(button, stallID, itemCode) {
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({
-                customerID: customerID,
-                stallID: stallID,
-                itemCode: itemCode
+                customerID,
+                stallID,
+                itemCode
             })
         });
 
-        const result = await response.json();
-
-        console.log("Like response:", result);
+        const result =
+            await response.json().catch(() => ({}));
 
         if (!response.ok) {
             throw new Error(
@@ -939,17 +777,24 @@ async function toggleHeart(button, stallID, itemCode) {
             );
         }
 
+        const itemKey = `${stallID}-${itemCode}`;
+
         if (result.liked === true) {
+            likedItems.add(itemKey);
             button.textContent = "❤️";
             button.classList.add("liked");
         } else {
+            likedItems.delete(itemKey);
             button.textContent = "🤍";
             button.classList.remove("liked");
         }
 
+        await updateFavouriteBadge();
+
     } catch (error) {
         console.error("Like error:", error);
         alert(error.message);
+
     } finally {
         button.disabled = false;
     }
