@@ -2,14 +2,16 @@ const likeModel = require("../models/likemodel");
 
 /*
     GET /api/likes/:customerID
+/*
+    GET /api/customers/:customerId/likes
 */
 async function getCustomerLikes(req, res) {
     try {
-        const { customerID } = req.params;
+        const customerID = req.params.customerId;
 
         if (!customerID) {
             return res.status(400).json({
-                message: "customerID is required."
+                message: "customerId is required."
             });
         }
 

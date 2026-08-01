@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favourites</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="Menu.css">
+</head>
+
+<body class="menu-page">
+
+    <header>
+        <nav class="navbar">
+    
+            <div class="navbar-brand-group">
+                <a href="Menu.html" class="btn-back-index">
+                    ← Back to Menu
+                </a>
+    
+                <a class="logo" href="Menu.html">
+                    SG Hawker Management
+                </a>
+            </div>
+    
+            <ul class="nav-links">
+    
+                <li>
+                    <a href="order-history.html">
+                        🕒 History
+                    </a>
+                </li>
+    
+                <li>
+                    <a href="member.html">
+                        🎁 Member
+                    </a>
+                </li>
+    
+                <li>
+                    <a href="rewards.html">
+                        🏆 Rewards
+                    </a>
+                </li>
+    
+                <li>
+                    <a href="cart.html" class="btn-cart">
+                        🛒 Cart
+                        <span id="cart-count">0</span>
+                    </a>
+                </li>
+    
+            </ul>
+    
+        </nav>
+    </header>
+
+    <main class="menu-page-view">
+        <section>
+            <div class="catalog-header">
+                <h2 class="catalog-title">My Favourite Dishes</h2>
+                <span id="favourite-count" class="catalog-count">
+                    Loading favourites...
+                </span>
+            </div>
+
+            <div id="favourites-grid" class="menu-grid"></div>
+
+            <div id="empty-favourites" class="hidden empty-state-box">
+                <h3>No favourite dishes yet</h3>
+                <p>Go back to the menu and press the heart icon.</p>
+
+                <a href="Menu.html" class="btn-primary">
+                    Browse Menu
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <script src="favourites.js"></script>
+</body>
+
+</html>

@@ -5,6 +5,7 @@ let currentStall = "ALL";
 let searchQuery = "";
 let cartItems = [];
 let cartCount = 0;
+let likedItems = new Set();
 let showSpecialsOnly = false; // THE MISSING VARIABLE!
 
 function loadCart() {
@@ -22,10 +23,108 @@ function saveCart() {
     renderCartPage();
 }
 
-// Initialize App DOM Layout Lifecycle Hooks
+async function loadCustomerLikes() {
+    const savedAuth = localStorage.getItem("hawkerhub-auth");
+
+    if (!savedAuth) {
+        likedItems.clear();
+        return;
+    }
+
+    try {
+        const authData = JSON.parse(savedAuth);
+
+        const token = authData.token;
+        const customerID =
+            authData.customer?.customerId ||
+            authData.customer?.customerID;
+
+        if (!token || !customerID) {
+            likedItems.clear();
+            return;
+        }
+
+        const response = await fetch(
+            `/api/customers/${encodeURIComponent(customerID)}/likes`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.message ||
+                result.error ||
+                "Unable to load favourites."
+            );
+        }
+
+        likedItems = new Set(
+            (result.likes || []).map(item =>
+                `${item.StallID}-${item.ItemCode}`
+            )
+        );
+
+    } catch (error) {
+        console.error("Load customer likes error:", error);
+        likedItems.clear();
+    }
+}
+
+async function updateFavouriteBadge() {
+    const savedAuth = localStorage.getItem("hawkerhub-auth");
+
+    if (!savedAuth) return;
+
+    try {
+        const authData = JSON.parse(savedAuth);
+
+        const token = authData.token;
+
+        const customerID =
+            authData.customer?.customerId ||
+            authData.customer?.customerID;
+
+        const response = await fetch(
+            `/api/customers/${customerID}/likes`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        const badge = document.getElementById("favorite-count");
+
+        if (!badge) return;
+
+        badge.textContent = data.totalLikes || 0;
+
+        if ((data.totalLikes || 0) === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "inline-flex";
+        }
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     loadCart();
+
     await fetchMenuItemsFromBackend();
+    await loadCustomerLikes();
+    await updateFavouriteBadge();
+
 
     // Initialize "All Items" button as active by default
     const allBtn = document.querySelector('[data-category="All"]');
@@ -235,16 +334,6 @@ function renderMenu() {
         const card = document.createElement("div");
         card.className = "menu-card";
         
-        // Dim the card slightly if it is out of stock
-        if (!item.available) {
-            card.style.opacity = "0.65";
-            card.style.filter = "grayscale(40%)";
-        }
-
-        // Create Daily Special Badge HTML
-        const specialBadge = item.isSpecial ? 
-            `<span style="background-color: #fef08a; color: #92400e; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 9999px; margin-left: 0.5rem; vertical-align: middle;">⭐ SPECIAL</span>` : '';
-
         card.innerHTML = `
             <div class="menu-card-body">
                 <div class="menu-card-meta">
@@ -262,9 +351,11 @@ function renderMenu() {
             <div class="menu-card-footer">
                 <div class="menu-card-footer-row">
                     <span class="menu-card-price">$${item.price.toFixed(2)}</span>
-                    <button class="heart-btn" onclick="toggleHeart(this, '${item.stallID}', '${item.itemCode}')">
-                        🤍
-                    </button>
+                   <button
+                class="heart-btn ${isLiked ? "liked" : ""}"
+                onclick="toggleHeart(this, '${stallID}', '${itemCode}')">
+                ${isLiked ? "❤️" : "🤍"}
+                </button>
                 </div>
                 <div class="menu-card-footer-row menu-card-footer-actions">
                     <button onclick="openItemDetailsPage(${item.id})" class="menu-card-link">
@@ -280,6 +371,8 @@ function renderMenu() {
         grid.appendChild(card);
     });
 }
+
+
 
 async function toggleHeart(button, stallID, itemCode) {
     const savedAuth = localStorage.getItem("hawkerhub-auth");
@@ -359,6 +452,7 @@ async function toggleHeart(button, stallID, itemCode) {
     }
 }
 
+
 function updateCartButton() {
     const cartCountEl = document.getElementById("cart-count");
     if (cartCountEl) {
@@ -432,6 +526,18 @@ function changeCartQuantity(id, delta) {
     saveCart();
 }
 
+//function to get the multiplier based on loyalty tier
+function getTierMultiplier(status) {
+    const multipliers = {
+        Bronze: 1,
+        Silver: 2,
+        Gold: 3,
+        Platinum: 4
+    };
+
+    return multipliers[status] || 1;
+}
+
 async function checkoutCart() {
     if (cartItems.length === 0) {
         alert("Your cart is empty.");
@@ -439,6 +545,7 @@ async function checkoutCart() {
     }
 
     const savedAuth = localStorage.getItem("hawkerhub-auth");
+
     if (!savedAuth) {
         alert("Please log in before checking out.");
         window.location.href = "Index.html";
@@ -446,6 +553,7 @@ async function checkoutCart() {
     }
 
     let authData;
+
     try {
         authData = JSON.parse(savedAuth);
     } catch (error) {
@@ -455,49 +563,156 @@ async function checkoutCart() {
     }
 
     const token = authData.token;
-    const customerId = authData.customer?.customerId || authData.customer?.CustomerID || authData.customer?.customerID;
+
+    const customerId =
+        authData.customer?.customerId ||
+        authData.customer?.CustomerID ||
+        authData.customer?.customerID;
 
     if (!token || !customerId) {
         alert("Your session is incomplete. Please log in again.");
         return;
     }
 
+    const subtotal = cartItems.reduce(
+        (sum, item) =>
+            sum + Number(item.price) * Number(item.quantity),
+        0
+    );
+
     try {
+        // Get current loyalty tier
+        const loyaltyInfoResponse = await fetch("/api/loyalty/me", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const loyaltyInfo =
+            await loyaltyInfoResponse.json().catch(() => ({}));
+
+        if (!loyaltyInfoResponse.ok) {
+            throw new Error(
+                loyaltyInfo.message ||
+                loyaltyInfo.error ||
+                "Unable to retrieve loyalty tier."
+            );
+        }
+
+        const memberStatus = loyaltyInfo.status || "Bronze";
+        const multiplier = getTierMultiplier(memberStatus);
+
+        const basePoints = Math.floor(subtotal);
+        const pointsEarned = basePoints * multiplier;
+
+        // Get database cart
         const cartResponse = await fetch("/api/cart", {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
-        const cartPayload = await cartResponse.json().catch(() => ({}));
+        const cartPayload =
+            await cartResponse.json().catch(() => ({}));
+
         if (!cartResponse.ok) {
-            throw new Error(cartPayload.error || cartPayload.message || "Unable to prepare cart for checkout.");
+            throw new Error(
+                cartPayload.error ||
+                cartPayload.message ||
+                "Unable to prepare cart for checkout."
+            );
         }
 
-        const cartId = cartPayload.cart?.CartID || cartPayload.cart?.CartId;
+        const cartId =
+            cartPayload.cart?.CartID ||
+            cartPayload.cart?.CartId;
+
         if (!cartId) {
-            throw new Error("No cart was created for this account.");
+            throw new Error(
+                "No cart was created for this account."
+            );
         }
 
-        localStorage.setItem("hawkerhub-cart-id", cartId);
+        localStorage.setItem(
+            "hawkerhub-cart-id",
+            cartId
+        );
 
+        // Complete checkout
         const checkoutResponse = await fetch("/api/cart/checkout", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ cartId, customerId, paymentType: "Cash" })
+            body: JSON.stringify({
+                cartId,
+                customerId,
+                paymentType: "Cash"
+            })
         });
 
-        const checkoutPayload = await checkoutResponse.json().catch(() => ({}));
+        const checkoutPayload =
+            await checkoutResponse.json().catch(() => ({}));
+
         if (!checkoutResponse.ok) {
-            throw new Error(checkoutPayload.error || checkoutPayload.message || "Checkout failed.");
+            throw new Error(
+                checkoutPayload.error ||
+                checkoutPayload.message ||
+                "Checkout failed."
+            );
         }
+
+        // Add loyalty points after checkout succeeds
+        if (pointsEarned > 0) {
+            const loyaltyResponse = await fetch("/api/loyalty/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    points: pointsEarned
+                })
+            });
+
+            const loyaltyPayload =
+                await loyaltyResponse.json().catch(() => ({}));
+
+            if (!loyaltyResponse.ok) {
+                throw new Error(
+                    loyaltyPayload.message ||
+                    loyaltyPayload.error ||
+                    "Order succeeded, but loyalty points could not be added."
+                );
+            }
+
+            console.log("Loyalty points added:", loyaltyPayload);
+        }
+
+        alert(
+            `🎉 Order placed successfully!\n\n` +
+            `Amount spent: $${subtotal.toFixed(2)}\n` +
+            `Member tier: ${memberStatus}\n` +
+            `Multiplier: ${multiplier}x\n` +
+            `Points earned: ${pointsEarned}`
+        );
+
+        cartItems = [];
+        saveCart();
+
+        window.location.href = "order-placed.html";
+
     } catch (error) {
         console.error("Checkout error:", error);
-        alert(error.message || "Checkout failed. Please try again.");
+
+        alert(
+            error.message ||
+            "Checkout failed. Please try again."
+        );
     }
+
 
     cartItems = [];
     saveCart();
@@ -590,4 +805,152 @@ function openItemDetailsPage(id) {
     }
 
     navigateTo('details-view');
+}
+
+// ===============================
+// LIKE BUTTON
+// ===============================
+async function toggleHeart(button, stallID, itemCode) {
+    const savedAuth = localStorage.getItem("hawkerhub-auth");
+
+    if (!savedAuth) {
+        alert("Please log in first.");
+        window.location.href = "Index.html";
+        return;
+    }
+
+    let authData;
+
+    try {
+        authData = JSON.parse(savedAuth);
+    } catch (error) {
+        console.error("Invalid login data:", error);
+        alert("Login information is invalid. Please log in again.");
+        return;
+    }
+
+    const token = authData.token;
+    const customer = authData.customer;
+    const customerID = customer.customerId;
+
+    if (!token || !customerID) {
+        alert("Token or Customer ID is missing. Please log in again.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/likes/toggle", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                customerID: customerID,
+                stallID: stallID,
+                itemCode: itemCode
+            })
+        });
+
+        const result = await response.json();
+
+        console.log("Like result:", result);
+
+        if (!response.ok) {
+            throw new Error(result.message || "Unable to update favourite.");
+        }
+
+        if (result.liked === true) {
+            button.textContent = "❤️";
+            button.classList.add("liked");
+        } else {
+            button.textContent = "🤍";
+            button.classList.remove("liked");
+        }
+
+    } catch (error) {
+        console.error("Like error:", error);
+        alert(error.message);
+    }
+}
+
+// ===============================
+// LIKE BUTTON
+// ===============================
+async function toggleHeart(button, stallID, itemCode) {
+    const savedAuth = localStorage.getItem("hawkerhub-auth");
+
+    if (!savedAuth) {
+        alert("Please log in first.");
+        window.location.href = "Index.html";
+        return;
+    }
+
+    let authData;
+
+    try {
+        authData = JSON.parse(savedAuth);
+    } catch (error) {
+        console.error("Invalid login information:", error);
+        alert("Login information is invalid. Please log in again.");
+        return;
+    }
+
+    const token = authData.token;
+    const customer = authData.customer;
+    const customerID = customer.customerId;
+
+    if (!token) {
+        alert("Login token is missing.");
+        return;
+    }
+
+    if (!customerID) {
+        alert("Customer ID is missing.");
+        console.log("Saved auth data:", authData);
+        return;
+    }
+
+    button.disabled = true;
+
+    try {
+        const response = await fetch("/api/likes/toggle", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                customerID: customerID,
+                stallID: stallID,
+                itemCode: itemCode
+            })
+        });
+
+        const result = await response.json();
+
+        console.log("Like response:", result);
+
+        if (!response.ok) {
+            throw new Error(
+                result.message ||
+                result.error ||
+                "Unable to update favourite."
+            );
+        }
+
+        if (result.liked === true) {
+            button.textContent = "❤️";
+            button.classList.add("liked");
+        } else {
+            button.textContent = "🤍";
+            button.classList.remove("liked");
+        }
+
+    } catch (error) {
+        console.error("Like error:", error);
+        alert(error.message);
+    } finally {
+        button.disabled = false;
+    }
 }
