@@ -12,7 +12,8 @@ const orderHistoryController = require("./controllers/orderHistoryController");
 const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
 const { verifyToken } = require("./middlewares/authMiddleware");
 const { registerCustomer, loginCustomer, getCustomerById, updateCustomerProfile, deleteCustomerProfile } = require("./controllers/customerController");
-
+const loyaltyController = require("./controllers/loyaltyController");
+const rewardController =require("./controllers/rewardController");
 const app = express();
 const port = 3000;
 
@@ -126,7 +127,7 @@ app.post("/api/feedback", feedbackController.createFeedback);
  app.delete("/api/feedback/:fbkID", feedbackController.deleteFeedback);
 
 // ==========================================
-// LIKE / FAVOURITE ROUTES
+// youliang LIKE / FAVOURITE ROUTES
 // ==========================================
 // Like route
 app.post("/api/likes/toggle", verifyToken, likeController.toggleLike);
@@ -134,7 +135,65 @@ app.post("/api/likes/toggle", verifyToken, likeController.toggleLike);
 //app.get("/api/likes/count/:stallId/:itemCode", likeController.getLikeCount);
 app.get("/api/customers/:customerId/likes", verifyToken, likeController.getCustomerLikes);
 //app.get("/api/likes",verifyToken,likeController.getLikedItems);
-app.delete( "/api/likes/:customerID/:stallID/:itemCode", verifyToken, likeController.deleteLike);
+app.delete("/api/likes/:customerID/:stallID/:itemCode", verifyToken, likeController.deleteLike);
+
+
+
+// ==========================================
+// youliang REWARD / Loyalty ROUTES
+// ==========================================
+
+// Get my loyalty information
+app.get(
+    "/api/loyalty/me",
+    verifyToken,
+    loyaltyController.getMyLoyalty
+);
+
+// Redeem points
+app.put(
+    "/api/loyalty/redeem",
+    verifyToken,
+    loyaltyController.redeemPoints
+);
+
+// Add points after checkout
+app.post(
+    "/api/loyalty/add",
+    verifyToken,
+    loyaltyController.addPoints
+);
+
+
+// ==========================================
+// REWARD ROUTES /For redemption of items  with loyalty points
+// ==========================================
+
+app.get(
+    "/api/rewards",
+    verifyToken,
+    rewardController.getRewards
+);
+
+app.post(
+    "/api/rewards/:rewardId/redeem",
+    verifyToken,
+    rewardController.redeemReward
+);
+
+app.get(
+    "/api/rewards/my-redemptions",
+    verifyToken,
+    rewardController.getMyRedemptions
+);
+
+app.put(
+    "/api/rewards/redemptions/:redemptionId",
+    verifyToken,
+    rewardController.updateRewardStatus
+);
+
+
 // ==========================================
 // START SERVER AND TEST CONNECTION
 // ==========================================

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HawkerHub - Member Rewards</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="Menu.css">
+    <link rel="stylesheet" href="rewards.css">
+</head>
+
+<body class="menu-page">
+
+    <header>
+        <nav class="navbar">
+            <div class="navbar-left">
+                <a href="member.html" class="btn-back-menu">
+                    ← Back
+                </a>
+
+                <div class="navbar-center">
+                    <a class="logo" href="Index.html">
+                        SG Hawker Management
+                    </a>
+                </div>
+            </div>
+
+            <ul class="nav-links">
+            <ul class="nav-links">
+            
+                <li>
+                    <a href="order-history.html" class="btn-orders">
+                        🕒 History
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="favourites.html" class="btn-favorites">
+                        ❤️ Favorites
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="member.html" class="btn-member">
+                        🎁 Member
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="rewards.html" class="btn-rewards">
+                        🏆 Rewards
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="cart.html" class="btn-cart">
+                        🛒 Cart
+                        <span id="cart-count">0</span>
+                    </a>
+                </li>
+            
+            </ul>
+        </nav>
+    </header>
+
+    <main class="rewards-page">
+
+        <section class="rewards-hero">
+            <div>
+                <span class="rewards-eyebrow">🎁 Member Rewards</span>
+
+                <h1>Redeem exclusive rewards</h1>
+
+                <p>
+                    Use your available loyalty points to redeem gifts.
+                    Collect redeemed items at the customer service counter.
+                </p>
+            </div>
+
+            <div class="rewards-points-card">
+                <span>Available Points</span>
+                <strong id="available-points">0</strong>
+            </div>
+        </section>
+
+        <section class="rewards-toolbar">
+            <div>
+                <h2>Available Rewards</h2>
+                <p id="reward-count">Loading rewards...</p>
+            </div>
+
+            <button id="refresh-rewards" class="rewards-secondary-button" type="button">
+                Refresh
+            </button>
+        </section>
+
+        <section id="rewards-grid" class="rewards-grid">
+        </section>
+
+        <section id="empty-rewards" class="rewards-empty hidden">
+            <h2>No rewards available</h2>
+            <p>Please check again later.</p>
+        </section>
+
+        <section class="redemption-history-section">
+            <div class="rewards-toolbar">
+                <div>
+                    <h2>My Redemptions</h2>
+                    <p>Show pending collection items at the counter.</p>
+                </div>
+            </div>
+
+            <div id="redemption-history" class="redemption-history">
+            </div>
+        </section>
+
+    </main>
+
+    <div id="reward-message" class="reward-toast hidden">
+    </div>
+
+    <script src="rewards.js"></script>
+</body>
+
+</html>

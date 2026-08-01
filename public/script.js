@@ -308,6 +308,8 @@ function updateNavigationUI(isLoggedIn) {
             <li><a href="Index.html">Home</a></li>
             <li><a href="Menu.html">Menu</a></li>
             <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="member.html">🎁 Member</a></li>
+            <li><a href="rewards.html">🏆 Rewards</a></li>
             <li><a onclick="handleLogout()">Log Out</a></li>
         `;
     } else {

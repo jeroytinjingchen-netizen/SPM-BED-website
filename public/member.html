@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SG Hawker Management - Member Loyalty</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="Menu.css">
+    <link rel="stylesheet" href="member.css">
+
+</head>
+
+<body class="menu-page">
+
+    <header>
+        <nav class="navbar">
+            <div class="navbar-brand-group">
+                <a href="Menu.html" class="btn-back-index">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7">
+                        </path>
+                    </svg>
+
+                    Back to Menu
+                </a>
+
+                <a href="Index.html" class="logo">
+                    SG Hawker Management
+                </a>
+            </div>
+
+            <ul class="nav-links">
+            
+                <li>
+                    <a href="order-history.html" class="btn-orders">
+                        🕒 Orders
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="favourites.html" class="btn-favorites">
+                        ❤️ Favorites
+                        <span id="favorite-count">0</span>
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="member.html" class="btn-member">
+                        🎁 Member
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="rewards.html" class="btn-rewards">
+                        🏆 Rewards
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="cart.html" class="btn-cart">
+                        🛒 Cart
+                        <span id="cart-count">0</span>
+                    </a>
+                </li>
+            
+            </ul>
+        </nav>
+    </header>
+
+    <main class="member-page">
+
+        <!-- Hero -->
+        <section class="member-hero">
+            <div class="member-hero-content">
+                <span class="member-eyebrow">
+                    🎁 Member Loyalty
+                </span>
+
+                <h1 class="member-title">
+                    Welcome back,
+                    <span id="member-name">Member</span>
+                </h1>
+
+                <p class="member-subtitle">
+                    Earn loyalty points whenever you order and redeem them
+                    for discounts on future purchases.
+                </p>
+            </div>
+
+            <div class="member-current-tier">
+                <span class="member-current-tier-label">
+                    Current Tier
+                </span>
+
+                <span id="member-tier-icon" class="member-current-tier-icon">
+                    🥉
+                </span>
+
+                <span id="member-tier" class="member-current-tier-name">
+                    Bronze
+                </span>
+            </div>
+        </section>
+
+    <section class="member-summary-grid">
+    
+        <article class="member-summary-card">
+            <div class="member-summary-icon">
+                ⭐
+            </div>
+    
+            <div>
+                <p class="member-summary-label">
+                    Available Points
+                </p>
+    
+                <p id="member-points" class="member-summary-value">
+                    0
+                </p>
+            </div>
+        </article>
+    
+        <article class="member-summary-card">
+            <div class="member-summary-icon">
+                📈
+            </div>
+    
+            <div>
+                <p class="member-summary-label">
+                    Lifetime Points Earned
+                </p>
+    
+                <p id="member-lifetime-points" class="member-summary-value">
+                    0
+                </p>
+            </div>
+        </article>
+    
+        <article class="member-summary-card">
+            <div class="member-summary-icon">
+                🎁
+            </div>
+    
+            <div>
+                <p class="member-summary-label">
+                    Discount Value
+                </p>
+    
+                <p id="member-discount-value" class="member-summary-value">
+                    $0.00
+                </p>
+            </div>
+        </article>
+    
+        <article class="member-summary-card">
+            <div class="member-summary-icon">
+                🏆
+            </div>
+    
+            <div>
+                <p class="member-summary-label">
+                    Next Tier
+                </p>
+    
+                <p id="next-tier" class="member-summary-value member-summary-value-small">
+                    Silver
+                </p>
+    
+                <p id="next-tier-progress" class="member-summary-note">
+                    100 points required
+                </p>
+            </div>
+        </article>
+    
+    </section>
+
+        <!-- Tier progress -->
+        <section class="member-progress-card">
+            <div class="member-progress-header">
+                <div>
+                    <h2>Membership Progress</h2>
+
+                    <p id="member-progress-description">
+                        Keep earning points to reach the next tier.
+                    </p>
+                </div>
+
+                <span id="member-progress-text" class="member-progress-text">
+                    0 / 100
+                </span>
+            </div>
+
+            <div class="member-progress-track">
+                <div id="member-progress-bar" class="member-progress-bar" style="width: 0%;">
+                </div>
+            </div>
+        </section>
+
+        <!-- Main content -->
+        <section class="member-content-grid">
+
+            <!-- Redeem -->
+            <article class="member-panel">
+                <div class="member-panel-heading">
+                    <div>
+                        <span class="member-panel-icon">🎟️</span>
+
+                        <div>
+                            <h2>Redeem Points</h2>
+
+                            <p>
+                                Every 10 points gives you $1 discount.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="redeem-form" class="member-redeem-form">
+
+                    <div class="member-field-group">
+                        <label for="points-to-redeem">
+                            Points to redeem
+                        </label>
+
+                        <input type="number" id="points-to-redeem" min="10" step="10" placeholder="Enter 10, 20, 30..."
+                            required>
+                    </div>
+
+                    <div class="member-redeem-preview">
+                        <span>
+                            Discount value
+                        </span>
+
+                        <strong id="redeem-preview">
+                            $0.00
+                        </strong>
+                    </div>
+
+                    <button type="submit" id="redeem-button" class="member-primary-button">
+                        Redeem Points
+                    </button>
+
+                </form>
+
+                <p id="member-message" class="member-message hidden">
+                </p>
+            </article>
+
+            <!-- Tiers -->
+            <article class="member-panel">
+                <div class="member-panel-heading">
+                    <div>
+                        <span class="member-panel-icon">🏅</span>
+
+                        <div>
+                            <h2>Membership Tiers</h2>
+
+                            <p>
+                                Earn more points to unlock higher tiers.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="member-tier-list">
+
+            <div class="member-tier-list">
+            
+                <div class="member-tier-list">
+                
+                    <div class="member-tier-row" data-tier="Bronze">
+                        <span class="member-tier-list-icon">🥉</span>
+                
+                        <div class="member-tier-details">
+                            <strong>Bronze</strong>
+                            <span>0–99 Lifetime Points</span>
+                
+                            <span class="member-tier-benefit">
+                                ⭐ Earn 1 point for every $1 spent (1×)
+                            </span>
+                        </div>
+                    </div>
+                
+                    <div class="member-tier-row" data-tier="Silver">
+                        <span class="member-tier-list-icon">🥈</span>
+                
+                        <div class="member-tier-details">
+                            <strong>Silver</strong>
+                            <span>100–299 Lifetime Points</span>
+                
+                            <span class="member-tier-benefit">
+                                ⭐ Earn 2 points for every $1 spent (2×)
+                            </span>
+                        </div>
+                    </div>
+                
+                    <div class="member-tier-row" data-tier="Gold">
+                        <span class="member-tier-list-icon">🥇</span>
+                
+                        <div class="member-tier-details">
+                            <strong>Gold</strong>
+                            <span>300–599 Lifetime Points</span>
+                
+                            <span class="member-tier-benefit">
+                                ⭐ Earn 3 points for every $1 spent (3×)
+                            </span>
+                        </div>
+                    </div>
+                
+                    <div class="member-tier-row" data-tier="Platinum">
+                        <span class="member-tier-list-icon">💎</span>
+                
+                        <div class="member-tier-details">
+                            <strong>Platinum</strong>
+                            <span>600+ Lifetime Points</span>
+                
+                            <span class="member-tier-benefit">
+                                ⭐ Earn 4 points for every $1 spent (4×)
+                            </span>
+                        </div>
+                    </div>
+                
+                </div>
+            </article>
+
+        </section>
+
+    </main>
+
+    <script src="member.js"></script>
+</body>
+
+</html>

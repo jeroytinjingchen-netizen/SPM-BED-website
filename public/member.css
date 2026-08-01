@@ -1,0 +1,444 @@
+/* ==========================================
+   MEMBER LOYALTY PAGE
+   ========================================== */
+
+.member-page {
+    width: min(1180px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 2.5rem 0 4rem;
+}
+
+.member-hero {
+    padding: 2rem;
+    border-radius: 1.5rem;
+    background:
+        radial-gradient(circle at top right,
+            rgba(255, 255, 255, 0.22),
+            transparent 32%),
+        linear-gradient(135deg, #cf432b, #e85e36);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    box-shadow: 0 18px 40px rgba(207, 67, 43, 0.2);
+}
+
+.member-hero-content {
+    max-width: 700px;
+}
+
+.member-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.member-title {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.08;
+    font-weight: 900;
+}
+
+.member-subtitle {
+    max-width: 620px;
+    margin: 0.9rem 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.member-current-tier {
+    min-width: 190px;
+    padding: 1.3rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.member-current-tier-label {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.member-current-tier-icon {
+    display: block;
+    margin-top: 0.6rem;
+    font-size: 2.2rem;
+}
+
+.member-current-tier-name {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+.member-summary-grid {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.member-summary-card {
+    min-height: 130px;
+    padding: 1.35rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.2rem;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.member-summary-icon {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 1rem;
+    background: #fff1ed;
+    display: grid;
+    place-items: center;
+    font-size: 1.65rem;
+}
+
+.member-summary-label {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.member-summary-value {
+    margin: 0.25rem 0 0;
+    color: #202124;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.member-summary-value-small {
+    font-size: 1.4rem;
+}
+
+.member-summary-note {
+    margin: 0.45rem 0 0;
+    color: #7b7f86;
+    font-size: 0.78rem;
+}
+
+.member-progress-card {
+    margin-top: 1.5rem;
+    padding: 1.4rem 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.2rem;
+    background: white;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+
+.member-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.member-progress-header h2 {
+    margin: 0;
+    color: #202124;
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.member-progress-header p {
+    margin: 0.35rem 0 0;
+    color: #6b7280;
+    font-size: 0.87rem;
+}
+
+.member-progress-text {
+    color: #cf432b;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.member-progress-track {
+    width: 100%;
+    height: 12px;
+    margin-top: 1rem;
+    border-radius: 999px;
+    background: #f1f3f5;
+    overflow: hidden;
+}
+
+.member-progress-bar {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #cf432b, #f3774d);
+    transition: width 0.35s ease;
+}
+
+.member-content-grid {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+    gap: 1.5rem;
+}
+
+.member-panel {
+    padding: 1.6rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.2rem;
+    background: white;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.member-panel-heading>div {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.member-panel-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.95rem;
+    background: #fff1ed;
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+}
+
+.member-panel-heading h2 {
+    margin: 0;
+    color: #202124;
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.member-panel-heading p {
+    margin: 0.3rem 0 0;
+    color: #6b7280;
+    font-size: 0.86rem;
+}
+
+.member-redeem-form {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.member-field-group {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.member-field-group label {
+    color: #374151;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.member-field-group input {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    border: 1px solid #d6d9de;
+    border-radius: 0.85rem;
+    background: #fff;
+    color: #202124;
+    font: inherit;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.member-field-group input:focus {
+    border-color: #cf432b;
+    box-shadow: 0 0 0 4px rgba(207, 67, 43, 0.12);
+}
+
+.member-redeem-preview {
+    padding: 1rem;
+    border-radius: 0.85rem;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #6b7280;
+}
+
+.member-redeem-preview strong {
+    color: #cf432b;
+    font-size: 1.3rem;
+}
+
+.member-primary-button {
+    width: 100%;
+    padding: 0.95rem 1.2rem;
+    border: 0;
+    border-radius: 999px;
+    background: #cf432b;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.member-primary-button:hover {
+    background: #b93722;
+    transform: translateY(-1px);
+}
+
+.member-primary-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.member-message {
+    margin: 1rem 0 0;
+    padding: 0.9rem 1rem;
+    border-radius: 0.85rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.member-message.success {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.member-message.error {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.member-tier-list {
+    margin-top: 1.4rem;
+    display: grid;
+    gap: 0.8rem;
+}
+
+.member-tier-row {
+    padding: 0.95rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: #fff;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.member-tier-row.active {
+    border-color: #cf432b;
+    background: #fff1ed;
+    transform: translateX(3px);
+}
+
+.member-tier-list-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.85rem;
+    background: #f8f9fa;
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+}
+
+.member-tier-details {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.member-tier-details strong {
+    color: #202124;
+    font-size: 0.95rem;
+}
+
+.member-tier-details span {
+    color: #6b7280;
+    font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+    .member-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .member-current-tier {
+        width: 100%;
+    }
+
+    .member-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .member-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .member-page {
+        width: min(100% - 1rem, 1180px);
+        padding-top: 1rem;
+    }
+
+    .member-hero {
+        padding: 1.4rem;
+        border-radius: 1.1rem;
+    }
+
+    .member-summary-card,
+    .member-progress-card,
+    .member-panel {
+        border-radius: 1rem;
+    }
+
+    .member-progress-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+.member-tier-benefit {
+    display: inline-flex;
+    width: fit-content;
+    margin-top: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: #fff1ed;
+    color: #c9442f;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.member-tier-row.active .member-tier-benefit {
+    background: #c9442f;
+    color: white;
+}
+}

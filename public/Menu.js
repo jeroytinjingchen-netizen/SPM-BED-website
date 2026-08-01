@@ -430,6 +430,18 @@ function changeCartQuantity(id, delta) {
     saveCart();
 }
 
+//function to get the multiplier based on loyalty tier
+function getTierMultiplier(status) {
+    const multipliers = {
+        Bronze: 1,
+        Silver: 2,
+        Gold: 3,
+        Platinum: 4
+    };
+
+    return multipliers[status] || 1;
+}
+
 async function checkoutCart() {
     if (cartItems.length === 0) {
         alert("Your cart is empty.");
@@ -437,6 +449,7 @@ async function checkoutCart() {
     }
 
     const savedAuth = localStorage.getItem("hawkerhub-auth");
+
     if (!savedAuth) {
         alert("Please log in before checking out.");
         window.location.href = "Index.html";
@@ -444,6 +457,7 @@ async function checkoutCart() {
     }
 
     let authData;
+
     try {
         authData = JSON.parse(savedAuth);
     } catch (error) {
@@ -453,49 +467,156 @@ async function checkoutCart() {
     }
 
     const token = authData.token;
-    const customerId = authData.customer?.customerId || authData.customer?.CustomerID || authData.customer?.customerID;
+
+    const customerId =
+        authData.customer?.customerId ||
+        authData.customer?.CustomerID ||
+        authData.customer?.customerID;
 
     if (!token || !customerId) {
         alert("Your session is incomplete. Please log in again.");
         return;
     }
 
+    const subtotal = cartItems.reduce(
+        (sum, item) =>
+            sum + Number(item.price) * Number(item.quantity),
+        0
+    );
+
     try {
+        // Get current loyalty tier
+        const loyaltyInfoResponse = await fetch("/api/loyalty/me", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const loyaltyInfo =
+            await loyaltyInfoResponse.json().catch(() => ({}));
+
+        if (!loyaltyInfoResponse.ok) {
+            throw new Error(
+                loyaltyInfo.message ||
+                loyaltyInfo.error ||
+                "Unable to retrieve loyalty tier."
+            );
+        }
+
+        const memberStatus = loyaltyInfo.status || "Bronze";
+        const multiplier = getTierMultiplier(memberStatus);
+
+        const basePoints = Math.floor(subtotal);
+        const pointsEarned = basePoints * multiplier;
+
+        // Get database cart
         const cartResponse = await fetch("/api/cart", {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
-        const cartPayload = await cartResponse.json().catch(() => ({}));
+        const cartPayload =
+            await cartResponse.json().catch(() => ({}));
+
         if (!cartResponse.ok) {
-            throw new Error(cartPayload.error || cartPayload.message || "Unable to prepare cart for checkout.");
+            throw new Error(
+                cartPayload.error ||
+                cartPayload.message ||
+                "Unable to prepare cart for checkout."
+            );
         }
 
-        const cartId = cartPayload.cart?.CartID || cartPayload.cart?.CartId;
+        const cartId =
+            cartPayload.cart?.CartID ||
+            cartPayload.cart?.CartId;
+
         if (!cartId) {
-            throw new Error("No cart was created for this account.");
+            throw new Error(
+                "No cart was created for this account."
+            );
         }
 
-        localStorage.setItem("hawkerhub-cart-id", cartId);
+        localStorage.setItem(
+            "hawkerhub-cart-id",
+            cartId
+        );
 
+        // Complete checkout
         const checkoutResponse = await fetch("/api/cart/checkout", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ cartId, customerId, paymentType: "Cash" })
+            body: JSON.stringify({
+                cartId,
+                customerId,
+                paymentType: "Cash"
+            })
         });
 
-        const checkoutPayload = await checkoutResponse.json().catch(() => ({}));
+        const checkoutPayload =
+            await checkoutResponse.json().catch(() => ({}));
+
         if (!checkoutResponse.ok) {
-            throw new Error(checkoutPayload.error || checkoutPayload.message || "Checkout failed.");
+            throw new Error(
+                checkoutPayload.error ||
+                checkoutPayload.message ||
+                "Checkout failed."
+            );
         }
+
+        // Add loyalty points after checkout succeeds
+        if (pointsEarned > 0) {
+            const loyaltyResponse = await fetch("/api/loyalty/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    points: pointsEarned
+                })
+            });
+
+            const loyaltyPayload =
+                await loyaltyResponse.json().catch(() => ({}));
+
+            if (!loyaltyResponse.ok) {
+                throw new Error(
+                    loyaltyPayload.message ||
+                    loyaltyPayload.error ||
+                    "Order succeeded, but loyalty points could not be added."
+                );
+            }
+
+            console.log("Loyalty points added:", loyaltyPayload);
+        }
+
+        alert(
+            `🎉 Order placed successfully!\n\n` +
+            `Amount spent: $${subtotal.toFixed(2)}\n` +
+            `Member tier: ${memberStatus}\n` +
+            `Multiplier: ${multiplier}x\n` +
+            `Points earned: ${pointsEarned}`
+        );
+
+        cartItems = [];
+        saveCart();
+
+        window.location.href = "order-placed.html";
+
     } catch (error) {
         console.error("Checkout error:", error);
-        alert(error.message || "Checkout failed. Please try again.");
+
+        alert(
+            error.message ||
+            "Checkout failed. Please try again."
+        );
     }
+
 
     cartItems = [];
     saveCart();
