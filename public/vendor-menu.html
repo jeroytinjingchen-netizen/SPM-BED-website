@@ -19,13 +19,23 @@
                     <!-- Identity Tag -->
                     <span id="vendor-stall-name" class="brand-tag ml-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold transition-all">Vendor Portal</span>
                 </div>
-                <a href="Index.html" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">Log Out</a>
+                <div class="flex items-center gap-4">
+                    <a href="#vendor-profile-section" class="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">My Profile</a>
+                    <a onclick="handleVendorLogout()" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer">Log Out</a>
+                </div>
             </div>
         </div>
     </nav>
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
+
+        <!-- Loading / auth-guard placeholder shown until vendor-menu.js confirms a valid session -->
+        <div id="vendor-auth-checking" class="text-center py-16 text-gray-500">
+            Checking your session...
+        </div>
+
+        <div id="vendor-dashboard-content" class="hidden space-y-8">
+
         <!-- SECTION: Add New Menu Item -->
         <section class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Add New Menu Item</h2>
@@ -71,6 +81,48 @@
             <div id="vendor-menu-grid" class="menu-grid"></div>
         </section>
 
+        <!-- SECTION: Vendor Profile (parity with customer dashboard.html) -->
+        <section id="vendor-profile-section" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">My Vendor Profile</h2>
+
+            <div id="vendor-update-alert" class="alert"></div>
+
+            <form id="vendor-update-form" class="space-y-4 max-w-lg">
+                <div class="form-group">
+                    <label for="vendor-update-name">Full Name</label>
+                    <input type="text" id="vendor-update-name" required placeholder="Enter full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="vendor-update-contact">Contact Number</label>
+                    <input type="text" id="vendor-update-contact" required placeholder="e.g. 9123456789" maxlength="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="vendor-update-email">Email Address</label>
+                    <input type="email" id="vendor-update-email" required placeholder="name@domain.com">
+                </div>
+
+                <button type="submit" id="vendor-update-submit-btn">Save Changes</button>
+            </form>
+
+            <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #eee;">
+
+            <h3 style="color: var(--primary-color);">Danger Zone</h3>
+
+            <p style="color:#666; font-size:0.9rem; margin: 0.5rem 0 1rem;">
+                Deleting your vendor account is permanent and cannot be undone.
+            </p>
+
+            <div id="vendor-delete-alert" class="alert"></div>
+
+            <button type="button" class="btn-danger" id="vendor-delete-account-btn" onclick="handleVendorDeleteAccount()">
+                Delete My Vendor Account
+            </button>
+        </section>
+
+        </div><!-- /#vendor-dashboard-content -->
+
     </main>
 
     <!-- HIDDEN MODAL: Edit Menu Item -->
@@ -114,6 +166,9 @@
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
 
+    <!-- vendor-auth.js first: provides restoreVendorSession(), handleVendorLogout(),
+         currentVendor / vendorToken globals that vendor.js relies on -->
+    <script src="vendor-auth.js"></script>
     <script src="vendor.js"></script>
 </body>
 </html>

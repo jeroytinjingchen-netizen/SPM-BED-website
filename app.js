@@ -9,9 +9,22 @@ const menuRoutes = require("./routes/menuRoutes");
 const feedbackController = require("./controllers/feedbackController");
 const likeController = require("./controllers/likeController");
 const orderHistoryController = require("./controllers/orderHistoryController");
-const { validateRegistration, validateLogin } = require("./middlewares/validateCustomer");
-const { verifyToken } = require("./middlewares/authMiddleware");
+const {
+  validateRegistration,
+  validateLogin,
+  validateVendorRegistration,
+  validateVendorLogin
+} = require("./middlewares/validateAuth");
+const { verifyToken, verifyVendorToken } = require("./middlewares/authMiddleware");
 const { registerCustomer, loginCustomer, getCustomerById, updateCustomerProfile, deleteCustomerProfile } = require("./controllers/customerController");
+const {
+  registerVendor,
+  loginVendor,
+  getVendorById,
+  updateVendorProfile,
+  deleteVendorProfile
+} = require("./controllers/vendorController");
+
 const loyaltyController = require("./controllers/loyaltyController");
 const rewardController =require("./controllers/rewardController");
 const app = express();
@@ -86,10 +99,10 @@ app.get('/owners/:id', async (req, res) => {
 });
 
 app.get("/stalls/:stallId/menu", menuItemController.getMenu);
-app.post("/stalls/:stallId/menu", menuItemController.addMenu);
-app.delete("/stalls/:stallId/menu/:itemCode", menuItemController.deleteMenu);
-app.put("/stalls/:stallId/menu/:itemCode", menuItemController.updateMenu);
-app.put("/stalls/:stallId/menu/:itemCode/toggle", menuItemController.toggleMenu);
+app.post("/stalls/:stallId/menu", verifyVendorToken, menuItemController.addMenu);
+app.delete("/stalls/:stallId/menu/:itemCode", verifyVendorToken, menuItemController.deleteMenu);
+app.put("/stalls/:stallId/menu/:itemCode", verifyVendorToken, menuItemController.updateMenu);
+app.put("/stalls/:stallId/menu/:itemCode/toggle", verifyVendorToken, menuItemController.toggleMenu);
 
 app.get('/api/menu/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -109,6 +122,15 @@ app.get("/api/customers/:id", verifyToken, getCustomerById);
 app.put("/api/customers/:id", verifyToken, updateCustomerProfile);
 app.delete("/api/customers/:id", verifyToken, deleteCustomerProfile);
 app.get("/api/customers/:id/orders", verifyToken, orderHistoryController.getCustomerOrderHistory);
+
+// ==========================================
+// VENDOR ROUTES
+// ==========================================
+app.post("/api/vendors/register", validateVendorRegistration, registerVendor);
+app.post("/api/vendors/login", validateVendorLogin, loginVendor);
+app.get("/api/vendors/:id", verifyVendorToken, getVendorById);
+app.put("/api/vendors/:id", verifyVendorToken, updateVendorProfile);
+app.delete("/api/vendors/:id", verifyVendorToken, deleteVendorProfile);
 
 // ==========================================
 // youliang FEEDBACK ROUTES - youliang
@@ -217,4 +239,3 @@ process.on("SIGINT", async () => {
   console.log("Database connection closed.");
   process.exit(0);
 });
-

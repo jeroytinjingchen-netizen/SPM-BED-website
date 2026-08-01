@@ -1,18 +1,82 @@
-// Hardcoded stall ID for testing until a login system passes the correct ID
-const stallId = "STL0000001"; 
+// ==========================================
+// SESSION / AUTH GUARD
+// Relies on vendor-auth.js being loaded first (restoreVendorSession,
+// handleVendorLogout, VENDOR_AUTH_KEY, currentVendor, vendorToken).
+// ==========================================
+let stallId = null;   // resolved after login, no longer hardcoded
+let vendorStalls = [];
 
-// Initialize page
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Fetch and show the menu as soon as the page loads
-    fetchVendorMenu();
-    
-    // 2. Attach submit events to our HTML forms
+    const auth = restoreVendorSession();
+
+    if (!auth || !auth.token) {
+        // Not logged in - bounce to the vendor login page instead of
+        // showing the dashboard with no data.
+        window.location.href = "vendor-login.html";
+        return;
+    }
+
+    vendorStalls = auth.stalls || [];
+
+    document.getElementById("vendor-auth-checking").classList.add("hidden");
+    document.getElementById("vendor-dashboard-content").classList.remove("hidden");
+
+    renderVendorIdentity(auth.vendor, vendorStalls);
+    prefillProfileForm(auth.vendor);
+
+    if (vendorStalls.length > 0) {
+        stallId = vendorStalls[0].StallID;
+        fetchVendorMenu();
+    } else {
+        document.getElementById("vendor-menu-grid").innerHTML =
+            `<p class="text-gray-500 col-span-full text-center py-8">
+                Your account isn't linked to a stall yet. Contact an admin
+                to set up your rental agreement before you can add menu items.
+            </p>`;
+        document.getElementById("add-item-form").querySelectorAll("button, input, select").forEach(el => el.disabled = true);
+    }
+
     document.getElementById("add-item-form").addEventListener("submit", handleAddItem);
     document.getElementById("edit-item-form").addEventListener("submit", handleEditSubmit);
+    document.getElementById("vendor-update-form").addEventListener("submit", handleVendorUpdateProfile);
 });
 
+// Small helper so every fetch to a protected vendor route carries the JWT
+function vendorAuthHeaders(extra = {}) {
+    return {
+        Authorization: `Bearer ${vendorToken}`,
+        ...extra
+    };
+}
+
+function renderVendorIdentity(vendor, stalls) {
+    const badge = document.getElementById("vendor-stall-name");
+    if (!badge) return;
+
+    if (stalls.length > 0) {
+        badge.textContent = `${vendor.name} · ${stalls[0].StallName}`;
+    } else {
+        badge.textContent = `${vendor.name} · No stall assigned`;
+    }
+}
+
+function prefillProfileForm(vendor) {
+    document.getElementById("vendor-update-name").value = vendor.name || "";
+    document.getElementById("vendor-update-email").value = vendor.email || "";
+    // Contact number isn't in the login response (login only returns name/email),
+    // so pull the full profile from GET /api/vendors/:id.
+    fetch(`/api/vendors/${vendor.ownerId}`, { headers: vendorAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+            if (data.OwnerContactNo) {
+                document.getElementById("vendor-update-contact").value = data.OwnerContactNo.trim();
+            }
+        })
+        .catch(err => console.error("Could not load full vendor profile:", err));
+}
+
 // ==========================================
-// READ: Fetch all items for this stall (GET)
+// READ: Fetch all items for this stall (GET) - public route, no auth needed
 // ==========================================
 async function fetchVendorMenu() {
     try {
@@ -90,7 +154,7 @@ function renderVendorMenu(items) {
 }
 
 // ==========================================
-// CREATE: Add a new item (POST)
+// CREATE: Add a new item (POST) - protected, needs vendor JWT
 // ==========================================
 async function handleAddItem(event) {
     event.preventDefault(); // Stop page from refreshing
@@ -107,7 +171,7 @@ async function handleAddItem(event) {
     try {
         const response = await fetch(`/stalls/${stallId}/menu`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: vendorAuthHeaders({ "Content-Type": "application/json" }),
             body: JSON.stringify(payload)
         });
 
@@ -115,6 +179,9 @@ async function handleAddItem(event) {
             alert("Success! Menu item added.");
             document.getElementById("add-item-form").reset(); // Clear the form
             fetchVendorMenu(); // Refresh the grid to show the new item
+        } else if (response.status === 401 || response.status === 403) {
+            alert("Your session has expired. Please log in again.");
+            handleVendorLogout();
         } else {
             const errorData = await response.json();
             alert("Error: " + errorData.error);
@@ -126,7 +193,7 @@ async function handleAddItem(event) {
 }
 
 // ==========================================
-// DELETE: Remove an item (DELETE)
+// DELETE: Remove an item (DELETE) - protected, needs vendor JWT
 // ==========================================
 async function handleDelete(itemCode) {
     // Add a safety check so vendors don't accidentally delete items
@@ -135,12 +202,16 @@ async function handleDelete(itemCode) {
 
     try {
         const response = await fetch(`/stalls/${stallId}/menu/${itemCode}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: vendorAuthHeaders()
         });
 
         if (response.ok) {
             alert("Item deleted successfully!");
             fetchVendorMenu(); // Refresh the grid to remove the item
+        } else if (response.status === 401 || response.status === 403) {
+            alert("Your session has expired. Please log in again.");
+            handleVendorLogout();
         } else {
             const errorData = await response.json();
             alert("Error: " + errorData.error);
@@ -152,7 +223,7 @@ async function handleDelete(itemCode) {
 }
 
 // ==========================================
-// UPDATE: Edit existing item logic (PUT)
+// UPDATE: Edit existing item logic (PUT) - protected, needs vendor JWT
 // ==========================================
 
 // 1. Open the modal and pre-fill it with the current data
@@ -188,7 +259,7 @@ async function handleEditSubmit(event) {
     try {
         const response = await fetch(`/stalls/${stallId}/menu/${itemCode}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: vendorAuthHeaders({ "Content-Type": "application/json" }),
             body: JSON.stringify(payload)
         });
 
@@ -196,6 +267,9 @@ async function handleEditSubmit(event) {
             alert("Success! Menu item updated.");
             closeEditModal(); // Hide the pop-up
             fetchVendorMenu(); // Refresh the grid to show updates
+        } else if (response.status === 401 || response.status === 403) {
+            alert("Your session has expired. Please log in again.");
+            handleVendorLogout();
         } else {
             const errorData = await response.json();
             alert("Error: " + errorData.error);
@@ -207,16 +281,20 @@ async function handleEditSubmit(event) {
 }
 
 // ==========================================
-// TOGGLE STOCK: Update availability (PUT)
+// TOGGLE STOCK: Update availability (PUT) - protected, needs vendor JWT
 // ==========================================
 async function toggleStock(itemCode) {
     try {
         const response = await fetch(`/stalls/${stallId}/menu/${itemCode}/toggle`, {
-            method: 'PUT'
+            method: 'PUT',
+            headers: vendorAuthHeaders()
         });
         
         if (response.ok) {
             fetchVendorMenu(); // Refresh the grid to show new status
+        } else if (response.status === 401 || response.status === 403) {
+            alert("Your session has expired. Please log in again.");
+            handleVendorLogout();
         } else {
             const errorData = await response.json();
             alert("Error: " + errorData.error);
@@ -228,26 +306,98 @@ async function toggleStock(itemCode) {
 }
 
 // ==========================================
-// IDENTITY: Fetch vendor details for navbar
+// PROFILE: Update vendor profile (PUT /api/vendors/:id)
 // ==========================================
-async function loadVendorIdentity() {
+async function handleVendorUpdateProfile(event) {
+    event.preventDefault();
+    const alertBox = document.getElementById("vendor-update-alert");
+    alertBox.style.display = "none";
+
+    const ownerName = document.getElementById("vendor-update-name").value.trim();
+    const ownerContactNo = document.getElementById("vendor-update-contact").value.trim();
+    const ownerEmail = document.getElementById("vendor-update-email").value.trim().toLowerCase();
+
+    const submitBtn = document.getElementById("vendor-update-submit-btn");
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Saving...";
+
     try {
-        // TEMPORARY: Hardcode an owner ID that exists in your database to test
-        const mockOwnerId = "OWN000001"; // Update this to a real ID from your DB!
-        
-        const response = await fetch(`/owners/${mockOwnerId}`);
-        if (!response.ok) throw new Error("Failed to fetch owner profile");
-        
+        const response = await fetch(`/api/vendors/${currentVendor.ownerId}`, {
+            method: "PUT",
+            headers: vendorAuthHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ ownerName, ownerContactNo, ownerEmail })
+        });
+
         const data = await response.json();
-        
-        // Target the header and update the text with the OwnerName
-        const headerElement = document.getElementById("vendor-stall-name");
-        if (headerElement) {
-            headerElement.textContent = `Welcome, ${data.OwnerName}`;
+
+        if (!response.ok) {
+            showVendorAlert(alertBox, "danger", data.message || "Update failed.");
+            return;
         }
-    } catch (error) {
-        console.error("Error loading vendor identity:", error);
+
+        currentVendor.name = ownerName;
+        currentVendor.email = ownerEmail;
+
+        // Keep localStorage in sync so a refresh doesn't show stale data
+        const saved = JSON.parse(localStorage.getItem(VENDOR_AUTH_KEY));
+        saved.vendor = currentVendor;
+        localStorage.setItem(VENDOR_AUTH_KEY, JSON.stringify(saved));
+
+        renderVendorIdentity(currentVendor, vendorStalls);
+        showVendorAlert(alertBox, "success", data.message || "Profile updated successfully.");
+    } catch (err) {
+        console.error(err);
+        showVendorAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Save Changes";
     }
 }
 
-loadVendorIdentity();
+// ==========================================
+// PROFILE: Delete vendor account (DELETE /api/vendors/:id)
+// ==========================================
+async function handleVendorDeleteAccount() {
+    const alertBox = document.getElementById("vendor-delete-alert");
+    alertBox.style.display = "none";
+
+    const confirmed = window.confirm(
+        "Are you sure you want to permanently delete your vendor account? This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    const deleteBtn = document.getElementById("vendor-delete-account-btn");
+    deleteBtn.disabled = true;
+    deleteBtn.innerText = "Deleting...";
+
+    try {
+        const response = await fetch(`/api/vendors/${currentVendor.ownerId}`, {
+            method: "DELETE",
+            headers: vendorAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showVendorAlert(alertBox, "danger", data.message || "Could not delete account.");
+            deleteBtn.disabled = false;
+            deleteBtn.innerText = "Delete My Vendor Account";
+            return;
+        }
+
+        alert(data.message || "Your vendor account has been deleted.");
+        handleVendorLogout();
+    } catch (err) {
+        console.error(err);
+        showVendorAlert(alertBox, "danger", "Could not reach the server. Please check the server is running.");
+        deleteBtn.disabled = false;
+        deleteBtn.innerText = "Delete My Vendor Account";
+    }
+}
+
+function showVendorAlert(element, type, message) {
+    if (!element) return;
+    element.className = `alert alert-${type}`;
+    element.innerText = message;
+    element.style.display = "block";
+}
