@@ -1,13 +1,4 @@
-// Mock Database Array tailored to Appendix A Hawker Operations (Main dishes, drinks)
-const menuItems = [
-    { id: 1, name: "Signature Hainanese Chicken Rice", category: "Mains", price: 5.50, description: "Tender poached chicken served with fragrant seasoned rice, chili sauce, and minced ginger.", available: true },
-    { id: 2, name: "Wok-Fried Hokkien Mee", category: "Mains", price: 6.00, description: "Stir-fried yellow noodles and thick bee hoon braised in rich prawn broth, topped with fresh prawns and squid.", available: true },
-    { id: 3, name: "Crispy Handmade Spring Rolls", category: "Sides", price: 3.50, description: "Deep-fried golden pastry skins stuffed with seasoned shredded turnips, carrots, and mushrooms. Serves 3 pieces.", available: true },
-    { id: 4, name: "Iced Kopi Melaka", category: "Beverages", price: 2.80, description: "Traditional Nanyang dark roasted coffee sweetened with rich, aromatic palm sugar syrup and fresh milk.", available: true },
-    { id: 5, name: "Spicy Laksa Lemak", category: "Mains", price: 6.50, description: "Thick rice noodles served in a rich, spicy coconut milk curry broth topped with juicy cockles and fish cakes.", available: true },
-    { id: 6, name: "Charcoal Grilled Chicken Satay", category: "Sides", price: 4.80, description: "Grilled marinated chicken skewers charred over charcoal, accompanied by a robust spicy peanut dipping sauce.", available: false },
-    { id: 7, name: "Teh Tarik (Frothy Milk Tea)", category: "Beverages", price: 2.20, description: "Black tea combined with condensed milk, poured back and forth repeatedly to create a smooth, frothy head.", available: true }
-];
+let menuItems = [];
 
 // Application Routing State Management Variables
 let currentCategory = "All";
@@ -34,10 +25,10 @@ function saveCart() {
 document.addEventListener("DOMContentLoaded", () => {
     loadCart();
 
-    // Initial draw phase
     renderMenu();
     updateCartButton();
     renderCartPage();
+    fetchMenuItemsFromBackend();
 
     const clearCartButton = document.getElementById("clear-cart");
     if (clearCartButton) {
