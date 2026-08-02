@@ -10,7 +10,7 @@ exports.searchMenu = async (req, res, next) => {
   try {
     const pool = await sql.connect(dbConfig);
     const request = pool.request();
-    let sqlQuery = `SELECT m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory
+    let sqlQuery = `SELECT m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory, m.IsAvailable, m.IsSpecial
       FROM dbo.MenuItem m`;
 
     if (q && q.trim() !== '') {
@@ -112,13 +112,12 @@ exports.getMenuItems = async (req, res) => {
         const pool = await sql.connect(dbConfig);
         const result = await pool.request()
             .input("SearchQuery", sql.VarChar, `%${q}%`)
+            // ✅ Added IsAvailable and IsSpecial
             .query(`
-                SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory 
+                SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory, IsAvailable, IsSpecial 
                 FROM dbo.MenuItem 
                 WHERE ItemDesc LIKE @SearchQuery OR ItemCategory LIKE @SearchQuery
             `);
-
-        res.status(200).json(result.recordset);
     } catch (err) {
         next(err);
     }
@@ -135,7 +134,7 @@ exports.filterMenu = async (req, res, next) => {
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         
-        let query = "SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory FROM dbo.MenuItem";
+        let query = "SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory, IsAvailable, IsSpecial FROM dbo.MenuItem";
         if (category && category !== "All") {
             request.input("Category", sql.VarChar(30), category);
             query += " WHERE ItemCategory = @Category";
@@ -162,10 +161,12 @@ exports.getPopularItems = async (req, res, next) => {
                 m.ItemDesc, 
                 m.ItemPrice, 
                 m.ItemCategory,
+                m.IsAvailable,
+                m.IsSpecial,
                 COUNT(l.CustomerID) AS TotalLikes
             FROM dbo.MenuItem m
             LEFT JOIN dbo.Likes l ON m.StallID = l.StallID AND m.ItemCode = l.ItemCode
-            GROUP BY m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory
+            GROUP BY m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory, m.IsAvailable, m.IsSpecial
             ORDER BY TotalLikes DESC
         `);
 
@@ -186,7 +187,7 @@ exports.getMenuByStall = async (req, res, next) => {
         const pool = await sql.connect(dbConfig);
         const result = await pool.request()
             .input("StallID", sql.Char(10), stall_id)
-            .query(`SELECT m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory
+            .query(`SELECT m.StallID, m.ItemCode, m.ItemDesc, m.ItemPrice, m.ItemCategory, m.IsAvailable, m.IsSpecial
                 FROM dbo.MenuItem m
                 WHERE m.StallID = @StallID`);
 

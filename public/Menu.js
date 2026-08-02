@@ -315,12 +315,21 @@ filtered.forEach(item => {
     const card = document.createElement("div");
     card.className = "menu-card";
     
+    // Dim the card slightly if it is out of stock (Vendor Feature)
+    if (!item.available) {
+        card.style.opacity = "0.65";
+        card.style.filter = "grayscale(40%)";
+    }
+    
     // Extract & define missing variables before generating the HTML
     const stallID = item.stallID || item.StallID || "";
     const itemCode = item.itemCode || item.ItemCode || "";
     const itemKey = `${stallID}-${itemCode}`;
     const isLiked = likedItems.has(itemKey);
-    const specialBadge = item.isSpecial ? `<span class="badge-special"> ⭐ Special</span>` : "";
+    
+    // Restored Daily Special Badge HTML with explicit inline styles so it doesn't disappear
+    const specialBadge = item.isSpecial ? 
+        `<span style="background-color: #fef08a; color: #92400e; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.5rem; border-radius: 9999px; margin-left: 0.5rem; vertical-align: middle;">⭐ SPECIAL</span>` : '';
 
     card.innerHTML = `
         <div class="menu-card-body">
