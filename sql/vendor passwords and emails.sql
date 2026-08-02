@@ -1,6 +1,6 @@
 USE [Group3Database];
 GO
-
+-- all vendor passwords is Password123
 -- 1. Update Aisha Rahman (OWN000004)
 UPDATE dbo.StallOwner
 SET OwnerEmail = 'aisha@example.com',
