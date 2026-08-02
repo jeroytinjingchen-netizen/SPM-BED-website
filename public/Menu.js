@@ -118,47 +118,49 @@ async function updateFavouriteBadge() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-    loadCart();
+if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", async () => {
+        loadCart();
 
-    await fetchMenuItemsFromBackend();
-    await loadCustomerLikes();
-    await updateFavouriteBadge();
+        await fetchMenuItemsFromBackend();
+        await loadCustomerLikes();
+        await updateFavouriteBadge();
 
 
-    // Initialize "All Items" button as active by default
-    const allBtn = document.querySelector('[data-category="All"]');
-    if (allBtn) {
-        allBtn.classList.add("active");
-    }
+        // Initialize "All Items" button as active by default
+        const allBtn = document.querySelector('[data-category="All"]');
+        if (allBtn) {
+            allBtn.classList.add("active");
+        }
 
-    // Initial draw phase
-    renderMenu();
-    updateCartButton();
-    renderCartPage();
+        // Initial draw phase
+        renderMenu();
+        updateCartButton();
+        renderCartPage();
 
-    const clearCartButton = document.getElementById("clear-cart");
-    if (clearCartButton) {
-        clearCartButton.addEventListener("click", () => {
-            cartItems = [];
-            saveCart();
-        });
-    }
+        const clearCartButton = document.getElementById("clear-cart");
+        if (clearCartButton) {
+            clearCartButton.addEventListener("click", () => {
+                cartItems = [];
+                saveCart();
+            });
+        }
 
-    const checkoutButton = document.getElementById("checkout-button");
-    if (checkoutButton) {
-        checkoutButton.addEventListener("click", checkoutCart);
-    }
-    
-    // Wire Search Input Field Text Events
-    const searchInput = document.getElementById("search-input");
-    if (searchInput) {
-        searchInput.addEventListener("input", (e) => {
-            searchQuery = e.target.value.toLowerCase();
-            renderMenu();
-        });
-    }
-});
+        const checkoutButton = document.getElementById("checkout-button");
+        if (checkoutButton) {
+            checkoutButton.addEventListener("click", checkoutCart);
+        }
+        
+        // Wire Search Input Field Text Events
+        const searchInput = document.getElementById("search-input");
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderMenu();
+            });
+        }
+    });
+}
 
 // ==========================================
 // BACK-END API FETCH (FED -> BED CONNECTION)
@@ -378,11 +380,17 @@ function updateCartButton() {
 }
 
 function getStoredAuthData() {
+    if (typeof localStorage === "undefined") {
+        return null;
+    }
+
     try {
         const savedAuth = localStorage.getItem("hawkerhub-auth");
         return savedAuth ? JSON.parse(savedAuth) : null;
     } catch (error) {
-        console.error("Invalid auth data:", error);
+        if (typeof console !== "undefined") {
+            console.error("Invalid auth data:", error);
+        }
         return null;
     }
 }
@@ -424,6 +432,26 @@ async function addToCart(id) {
             if (!response.ok) {
                 throw new Error(result.error || result.message || "Unable to sync item to cart.");
             }
+
+            const targetItem = existingItem || cartItems.find(cartItem => cartItem.id === id);
+            const matchingServerItem = (result.items || []).find((serverItem) => {
+                const serverStall = String(serverItem.StallID || serverItem.stallID || "");
+                const serverCode = String(serverItem.ItemCode || serverItem.itemCode || "");
+                const localStall = String(item.stallID || item.StallID || "");
+                const localCode = String(item.itemCode || item.ItemCode || "");
+                return serverStall === localStall && serverCode === localCode;
+            });
+
+            if (targetItem && matchingServerItem) {
+                targetItem.cartItemNo = matchingServerItem.CartItemNo || matchingServerItem.cartItemNo;
+                targetItem.stallID = matchingServerItem.StallID || matchingServerItem.stallID || item.stallID || item.StallID;
+                targetItem.itemCode = matchingServerItem.ItemCode || matchingServerItem.itemCode || item.itemCode || item.ItemCode;
+                saveCart();
+            }
+
+            if (result.cartId) {
+                localStorage.setItem("hawkerhub-cart-id", result.cartId);
+            }
         } catch (error) {
             console.error("Cart sync error:", error);
         }
@@ -432,15 +460,120 @@ async function addToCart(id) {
     alert(`${item.name} has been added to the cart.`);
 }
 
-function changeCartQuantity(id, delta) {
+async function getCartIdForSync(options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+    const storedCartId = options.cartId || (typeof localStorage !== "undefined" ? localStorage.getItem("hawkerhub-cart-id") : null);
+
+    if (storedCartId) {
+        return storedCartId;
+    }
+
+    if (!token) {
+        return null;
+    }
+
+    const fetchImpl = options.fetchImpl || fetch;
+    const response = await fetchImpl("/api/cart", {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || result.message || "Unable to resolve cart ID.");
+    }
+
+    const cartId = result.cart?.CartID || result.cart?.CartId;
+    if (cartId && typeof localStorage !== "undefined") {
+        localStorage.setItem("hawkerhub-cart-id", cartId);
+    }
+
+    return cartId || null;
+}
+
+async function syncCartItemQuantity(item, nextQuantity, options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+    const cartItemNo = options.cartItemNo ?? item?.cartItemNo;
+    const cartId = await getCartIdForSync({ ...options, token });
+
+    if (!token || !cartId || typeof cartItemNo === 'undefined' || cartItemNo === null) {
+        return false;
+    }
+
+    const fetchImpl = options.fetchImpl || fetch;
+    const response = await fetchImpl("/api/cart/update", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            cartId,
+            cartItemNo,
+            quantity: nextQuantity
+        })
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || result.message || "Unable to update cart quantity.");
+    }
+
+    return true;
+}
+
+async function syncCartItemRemoval(item, options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+    const cartItemNo = options.cartItemNo ?? item?.cartItemNo;
+    const cartId = await getCartIdForSync({ ...options, token });
+
+    if (!token || !cartId || typeof cartItemNo === 'undefined' || cartItemNo === null) {
+        return false;
+    }
+
+    const fetchImpl = options.fetchImpl || fetch;
+    const response = await fetchImpl("/api/cart/remove", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            cartId,
+            cartItemNo
+        })
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || result.message || "Unable to remove cart item.");
+    }
+
+    return true;
+}
+
+async function changeCartQuantity(id, delta) {
     const item = cartItems.find(cartItem => cartItem.id === id);
     if (!item) return;
 
     const nextQuantity = item.quantity + delta;
-    if (nextQuantity < 1) return;
+    if (nextQuantity < 1) {
+        await removeCartItem(id);
+        return;
+    }
 
     item.quantity = nextQuantity;
     saveCart();
+
+    try {
+        await syncCartItemQuantity(item, item.quantity);
+    } catch (error) {
+        console.error("Cart sync error:", error);
+    }
 }
 
 //function to get the multiplier based on loyalty tier
@@ -636,9 +769,19 @@ async function checkoutCart() {
     window.location.href = "order-placed.html";
 }
 
-function removeCartItem(id) {
-    cartItems = cartItems.filter(cartItem => cartItem.id !== id);
+async function removeCartItem(id) {
+    const item = cartItems.find(cartItem => cartItem.id === id);
+    if (!item) return;
+
+    const remainingItems = cartItems.filter(cartItem => cartItem.id !== id);
+    cartItems = remainingItems;
     saveCart();
+
+    try {
+        await syncCartItemRemoval(item);
+    } catch (error) {
+        console.error("Cart sync error:", error);
+    }
 }
 
 function renderCartPage() {
@@ -696,11 +839,20 @@ function renderCartPage() {
     }
 }
 
-window.addEventListener("storage", () => {
-    loadCart();
-    updateCartButton();
-    renderCartPage();
-});
+if (typeof window !== "undefined") {
+    window.addEventListener("storage", () => {
+        loadCart();
+        updateCartButton();
+        renderCartPage();
+    });
+}
+
+if (typeof module !== "undefined") {
+    module.exports = {
+        syncCartItemQuantity,
+        syncCartItemRemoval
+    };
+}
 
 function openItemDetailsPage(id) {
     const item = menuItems.find(i => i.id === id);
