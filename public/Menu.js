@@ -312,12 +312,11 @@ function renderMenu() {
     grid.classList.remove("hidden");
     emptyState.classList.add("hidden");
 
-// ✅ FIXED PORTION
 filtered.forEach(item => {
     const card = document.createElement("div");
     card.className = "menu-card";
     
-    // Dim the card slightly if it is out of stock (Vendor Feature)
+    // Dim the card slightly if it is out of stock
     if (!item.available) {
         card.style.opacity = "0.65";
         card.style.filter = "grayscale(40%)";

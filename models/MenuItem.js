@@ -66,7 +66,7 @@ class MenuItem {
         return result.rowsAffected[0] > 0; 
     }
 
-    // PUT: Toggle IsAvailable status for Feature 2
+    // PUT: Toggle IsAvailable status
     static async toggleMenuItem(stallId, itemCode) {
         const request = new sql.Request();
         request.input("StallID", sql.Char(10), stallId);

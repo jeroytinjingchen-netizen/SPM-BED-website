@@ -10,7 +10,7 @@ async function generateNextOwnerId(pool) {
     const result = await pool.request()
         .query("SELECT MAX(OwnerID) AS maxId FROM dbo.StallOwner");
 
-    const maxId = result.recordset[0].maxId; // e.g. 'OWN000010' (char(10), space-padded) or null
+    const maxId = result.recordset[0].maxId;
     let nextNumber = 1;
 
     if (maxId) {

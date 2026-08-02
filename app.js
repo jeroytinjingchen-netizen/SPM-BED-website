@@ -34,11 +34,9 @@ const port = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serves your front-end (Index.html, script.js, style.css) from /public
-// e.g. visiting http://localhost:3000 loads Index.html automatically
+// Serve the frontend from the public folder.
 app.use(express.static("public"));
 
-// Debug request logging
 app.use((req, res, next) => {
   console.log('REQ', req.method, req.originalUrl);
   next();

@@ -63,7 +63,7 @@ exports.getItemDetails = async (req, res, next) => {
   }
 };
 
-// 4. PUT: Update Menu Item Details (Your Checkpoint Feature!)
+// 4. PUT: Update Menu Item Details
 exports.updateMenuItem = async (req, res, next) => {
   const { item_id } = req.params; 
   const { item_name, description, price, availability } = req.body;
@@ -104,15 +104,11 @@ exports.updateMenuItem = async (req, res, next) => {
 
 const db = require('../dbconfig');
 
-// ... (keep any existing controller functions you already have here) ...
-
-// ADD YOUR NEW MENU FUNCTION AT THE BOTTOM:
 exports.getMenuItems = async (req, res) => {
     try {
         const pool = await sql.connect(dbConfig);
         const result = await pool.request()
             .input("SearchQuery", sql.VarChar, `%${q}%`)
-            // ✅ Added IsAvailable and IsSpecial
             .query(`
                 SELECT StallID, ItemCode, ItemDesc, ItemPrice, ItemCategory, IsAvailable, IsSpecial 
                 FROM dbo.MenuItem 
@@ -125,7 +121,6 @@ exports.getMenuItems = async (req, res) => {
 
 // ==========================================
 // 2. GET: Filter Menu Items by Category
-// Feature: Filter Menu Items by Category & Dietary Preferences
 // ==========================================
 exports.filterMenu = async (req, res, next) => {
     const { category } = req.query; // e.g. /api/menu/filter?category=Mains
@@ -149,7 +144,6 @@ exports.filterMenu = async (req, res, next) => {
 
 // ==========================================
 // 3. GET: Retrieve Popular / Top-Selling Menu Items
-// Feature: Retrieve Popular / Top-Selling Menu Items
 // ==========================================
 exports.getPopularItems = async (req, res, next) => {
     try {
@@ -178,7 +172,6 @@ exports.getPopularItems = async (req, res, next) => {
 
 // ==========================================
 // 4. GET: Fetch Menu Items by Specific Hawker Stall
-// Feature: Fetch Menu Items by Specific Hawker Stall
 // ==========================================
 exports.getMenuByStall = async (req, res, next) => {
     const { stall_id } = req.params;
@@ -266,7 +259,7 @@ exports.convertPrice = async (req, res, next) => {
 };
 
 // ==========================================
-// 7. POST: Compare Menu Items Side-by-Side (Customer Feature)
+// 7. POST: Compare Menu Items Side-by-Side
 // ==========================================
 exports.compareMenuItems = async (req, res, next) => {
     const { itemIds } = req.body; // Expects array e.g. ["ITM01", "ITM02"]
@@ -298,7 +291,7 @@ exports.compareMenuItems = async (req, res, next) => {
 };
 
 // ==========================================
-// 8. POST: Save Customer Search Term Log (Customer Feature)
+// 8. POST: Save Customer Search Term Log
 // ==========================================
 exports.saveSearchHistory = async (req, res, next) => {
     const { searchTerm } = req.body;
@@ -320,7 +313,7 @@ exports.saveSearchHistory = async (req, res, next) => {
 };
 
 // ==========================================
-// 9. DELETE: Clear Customer Search History (Customer Feature)
+// 9. DELETE: Clear Customer Search History
 // ==========================================
 exports.clearSearchHistory = async (req, res, next) => {
     const customerId = req.customer?.customerId;

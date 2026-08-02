@@ -14,7 +14,7 @@ router.get("/item/:item_id", menuController.getItemDetails);
 router.get("/convert", menuController.convertPrice);
 
 // ==========================================
-// 2. CUSTOMER WRITE/DELETE OPERATIONS (Menu Feature Extensions)
+// 2. CUSTOMER WRITE/DELETE OPERATIONS
 // ==========================================
 
 // POST: Save a recent search term for the customer
