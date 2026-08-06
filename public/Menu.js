@@ -118,48 +118,64 @@ async function updateFavouriteBadge() {
     }
 }
 
+async function initializeMenuPage() {
+    loadCart();
+
+    try {
+        await refreshCartFromServer();
+    } catch (error) {
+        console.error("Unable to refresh cart from server:", error);
+    }
+
+    await fetchMenuItemsFromBackend();
+
+    const allBtn = document.querySelector('[data-category="All"]');
+    if (allBtn) {
+        allBtn.classList.add("active");
+    }
+
+    renderMenu();
+    updateCartButton();
+    renderCartPage();
+
+    const clearCartButton = document.getElementById("clear-cart");
+    if (clearCartButton) {
+        clearCartButton.addEventListener("click", () => {
+            cartItems = [];
+            saveCart();
+        });
+    }
+
+    const checkoutButton = document.getElementById("checkout-button");
+    if (checkoutButton) {
+        checkoutButton.addEventListener("click", checkoutCart);
+    }
+
+    const searchInput = document.getElementById("search-input");
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderMenu();
+        });
+    }
+
+    return true;
+}
+
 if (typeof document !== "undefined") {
-    document.addEventListener("DOMContentLoaded", async () => {
-        loadCart();
-
-        await fetchMenuItemsFromBackend();
-        await loadCustomerLikes();
-        await updateFavouriteBadge();
-
-
-        // Initialize "All Items" button as active by default
-        const allBtn = document.querySelector('[data-category="All"]');
-        if (allBtn) {
-            allBtn.classList.add("active");
-        }
-
-        // Initial draw phase
-        renderMenu();
-        updateCartButton();
-        renderCartPage();
-
-        const clearCartButton = document.getElementById("clear-cart");
-        if (clearCartButton) {
-            clearCartButton.addEventListener("click", () => {
-                cartItems = [];
-                saveCart();
-            });
-        }
-
-        const checkoutButton = document.getElementById("checkout-button");
-        if (checkoutButton) {
-            checkoutButton.addEventListener("click", checkoutCart);
-        }
-        
-        // Wire Search Input Field Text Events
-        const searchInput = document.getElementById("search-input");
-        if (searchInput) {
-            searchInput.addEventListener("input", (e) => {
-                searchQuery = e.target.value.toLowerCase();
-                renderMenu();
-            });
-        }
+    document.addEventListener("DOMContentLoaded", () => {
+        initializeMenuPage().catch((error) => {
+            console.error("Unable to initialize menu page:", error);
+        });
     });
+}
+
+if (typeof module !== "undefined") {
+    module.exports = {
+        syncCartItemQuantity,
+        syncCartItemRemoval,
+        initializeMenuPage
+    };
 }
 
 // ==========================================
@@ -394,6 +410,77 @@ function getStoredAuthData() {
     }
 }
 
+function buildLocalCartItem(serverItem, fallbackItem = null) {
+    const fallback = fallbackItem || {};
+    const stallID = serverItem?.StallID || serverItem?.stallID || fallback?.stallID || fallback?.StallID || "";
+    const itemCode = serverItem?.ItemCode || serverItem?.itemCode || fallback?.itemCode || fallback?.ItemCode || "";
+    const quantity = Number(serverItem?.Quantity || serverItem?.quantity || 0);
+    const unitPrice = Number(serverItem?.UnitPrice || serverItem?.unitPrice || fallback?.price || fallback?.UnitPrice || 0);
+
+    return {
+        ...fallback,
+        id: fallback.id ?? `${stallID}-${itemCode}`,
+        name: fallback.name || serverItem?.ItemDesc || serverItem?.name || "Item",
+        category: fallback.category || serverItem?.category || "",
+        price: unitPrice,
+        quantity,
+        stallID,
+        itemCode,
+        cartItemNo: serverItem?.CartItemNo || serverItem?.cartItemNo || fallback.cartItemNo
+    };
+}
+
+function applyServerCartItems(serverItems, fallbackItems = cartItems) {
+    const fallbackList = Array.isArray(fallbackItems) ? fallbackItems : [];
+    const mergedItems = (Array.isArray(serverItems) ? serverItems : []).map((serverItem) => {
+        const fallbackMatch = fallbackList.find((candidate) => {
+            const candidateStall = String(candidate?.stallID || candidate?.StallID || "");
+            const candidateCode = String(candidate?.itemCode || candidate?.ItemCode || "");
+            return String(serverItem?.StallID || serverItem?.stallID || "") === candidateStall &&
+                String(serverItem?.ItemCode || serverItem?.itemCode || "") === candidateCode;
+        });
+        return buildLocalCartItem(serverItem, fallbackMatch || null);
+    });
+
+    cartItems = mergedItems;
+    saveCart();
+    return cartItems;
+}
+
+async function refreshCartFromServer(options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+
+    if (!token) {
+        return false;
+    }
+
+    try {
+        const fetchImpl = options.fetchImpl || fetch;
+        const response = await fetchImpl("/api/cart", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(result.error || result.message || "Unable to load cart from server.");
+        }
+
+        const cartId = result.cart?.CartID || result.cart?.CartId;
+        if (cartId && typeof localStorage !== "undefined") {
+            localStorage.setItem("hawkerhub-cart-id", cartId);
+        }
+
+        applyServerCartItems(result.items || [], cartItems);
+        return true;
+    } catch (error) {
+        console.error("Cart refresh error:", error);
+        return false;
+    }
+}
+
 async function addToCart(id) {
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
@@ -432,24 +519,14 @@ async function addToCart(id) {
                 throw new Error(result.error || result.message || "Unable to sync item to cart.");
             }
 
-            const targetItem = existingItem || cartItems.find(cartItem => cartItem.id === id);
-            const matchingServerItem = (result.items || []).find((serverItem) => {
-                const serverStall = String(serverItem.StallID || serverItem.stallID || "");
-                const serverCode = String(serverItem.ItemCode || serverItem.itemCode || "");
-                const localStall = String(item.stallID || item.StallID || "");
-                const localCode = String(item.itemCode || item.ItemCode || "");
-                return serverStall === localStall && serverCode === localCode;
-            });
-
-            if (targetItem && matchingServerItem) {
-                targetItem.cartItemNo = matchingServerItem.CartItemNo || matchingServerItem.cartItemNo;
-                targetItem.stallID = matchingServerItem.StallID || matchingServerItem.stallID || item.stallID || item.StallID;
-                targetItem.itemCode = matchingServerItem.ItemCode || matchingServerItem.itemCode || item.itemCode || item.ItemCode;
-                saveCart();
+            if (result.cartId && typeof localStorage !== "undefined") {
+                localStorage.setItem("hawkerhub-cart-id", result.cartId);
             }
 
-            if (result.cartId) {
-                localStorage.setItem("hawkerhub-cart-id", result.cartId);
+            if (result.items) {
+                applyServerCartItems(result.items, cartItems);
+            } else {
+                saveCart();
             }
         } catch (error) {
             console.error("Cart sync error:", error);
@@ -521,7 +598,7 @@ async function syncCartItemQuantity(item, nextQuantity, options = {}) {
         throw new Error(result.error || result.message || "Unable to update cart quantity.");
     }
 
-    return true;
+    return result;
 }
 
 async function syncCartItemRemoval(item, options = {}) {
@@ -552,7 +629,7 @@ async function syncCartItemRemoval(item, options = {}) {
         throw new Error(result.error || result.message || "Unable to remove cart item.");
     }
 
-    return true;
+    return result;
 }
 
 async function changeCartQuantity(id, delta) {
@@ -569,7 +646,10 @@ async function changeCartQuantity(id, delta) {
     saveCart();
 
     try {
-        await syncCartItemQuantity(item, item.quantity);
+        const syncResult = await syncCartItemQuantity(item, item.quantity);
+        if (syncResult?.items) {
+            applyServerCartItems(syncResult.items, cartItems);
+        }
     } catch (error) {
         console.error("Cart sync error:", error);
     }
@@ -698,7 +778,13 @@ async function checkoutCart() {
             body: JSON.stringify({
                 cartId,
                 customerId,
-                paymentType: "Cash"
+                paymentType: "Cash",
+                items: cartItems.map((item) => ({
+                    StallID: item.stallID || item.StallID,
+                    ItemCode: item.itemCode || item.ItemCode,
+                    Quantity: item.quantity,
+                    UnitPrice: item.price || item.UnitPrice || 0
+                }))
             })
         });
 
@@ -777,7 +863,10 @@ async function removeCartItem(id) {
     saveCart();
 
     try {
-        await syncCartItemRemoval(item);
+        const syncResult = await syncCartItemRemoval(item);
+        if (syncResult?.items) {
+            applyServerCartItems(syncResult.items, cartItems);
+        }
     } catch (error) {
         console.error("Cart sync error:", error);
     }
@@ -846,12 +935,6 @@ if (typeof window !== "undefined") {
     });
 }
 
-if (typeof module !== "undefined") {
-    module.exports = {
-        syncCartItemQuantity,
-        syncCartItemRemoval
-    };
-}
 
 function openItemDetailsPage(id) {
     const item = menuItems.find(i => i.id === id);
@@ -866,10 +949,10 @@ function openItemDetailsPage(id) {
 
     if (item.available) {
         statusEl.textContent = "In Stock / Available";
-        statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800";
+        statusEl.className = "details-status-pill available";
     } else {
         statusEl.textContent = "Out of Stock / Unavailable";
-        statusEl.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800";
+        statusEl.className = "details-status-pill unavailable";
     }
 
     navigateTo('details-view');

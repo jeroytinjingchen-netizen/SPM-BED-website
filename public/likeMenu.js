@@ -21,9 +21,191 @@ function saveCart() {
     renderCartPage();
 }
 
+function getStoredAuthData() {
+    if (typeof localStorage === "undefined") {
+        return null;
+    }
+
+    try {
+        const savedAuth = localStorage.getItem("hawkerhub-auth");
+        return savedAuth ? JSON.parse(savedAuth) : null;
+    } catch (error) {
+        if (typeof console !== "undefined") {
+            console.error("Invalid auth data:", error);
+        }
+        return null;
+    }
+}
+
+function buildLocalCartItem(serverItem, fallbackItem = null) {
+    const fallback = fallbackItem || {};
+    const stallID = serverItem?.StallID || serverItem?.stallID || fallback?.stallID || fallback?.StallID || "";
+    const itemCode = serverItem?.ItemCode || serverItem?.itemCode || fallback?.itemCode || fallback?.ItemCode || "";
+    const quantity = Number(serverItem?.Quantity || serverItem?.quantity || 0);
+    const unitPrice = Number(serverItem?.UnitPrice || serverItem?.unitPrice || fallback?.price || fallback?.UnitPrice || 0);
+
+    return {
+        ...fallback,
+        id: fallback.id ?? `${stallID}-${itemCode}`,
+        name: fallback.name || serverItem?.ItemDesc || serverItem?.name || "Item",
+        category: fallback.category || serverItem?.category || "",
+        price: unitPrice,
+        quantity,
+        stallID,
+        itemCode,
+        cartItemNo: serverItem?.CartItemNo || serverItem?.cartItemNo || fallback.cartItemNo
+    };
+}
+
+function applyServerCartItems(serverItems, fallbackItems = cartItems) {
+    const fallbackList = Array.isArray(fallbackItems) ? fallbackItems : [];
+    const mergedItems = (Array.isArray(serverItems) ? serverItems : []).map((serverItem) => {
+        const fallbackMatch = fallbackList.find((candidate) => {
+            const candidateStall = String(candidate?.stallID || candidate?.StallID || "");
+            const candidateCode = String(candidate?.itemCode || candidate?.ItemCode || "");
+            return String(serverItem?.StallID || serverItem?.stallID || "") === candidateStall &&
+                String(serverItem?.ItemCode || serverItem?.itemCode || "") === candidateCode;
+        });
+        return buildLocalCartItem(serverItem, fallbackMatch || null);
+    });
+
+    cartItems = mergedItems;
+    saveCart();
+    return cartItems;
+}
+
+async function refreshCartFromServer(options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+
+    if (!token) {
+        return false;
+    }
+
+    try {
+        const fetchImpl = options.fetchImpl || fetch;
+        const response = await fetchImpl("/api/cart", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(result.error || result.message || "Unable to load cart from server.");
+        }
+
+        const cartId = result.cart?.CartID || result.cart?.CartId;
+        if (cartId && typeof localStorage !== "undefined") {
+            localStorage.setItem("hawkerhub-cart-id", cartId);
+        }
+
+        applyServerCartItems(result.items || [], cartItems);
+        return true;
+    } catch (error) {
+        console.error("Cart refresh error:", error);
+        return false;
+    }
+}
+
+async function getCartIdForSync(options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+    const storedCartId = options.cartId || (typeof localStorage !== "undefined" ? localStorage.getItem("hawkerhub-cart-id") : null);
+
+    if (storedCartId) {
+        return storedCartId;
+    }
+
+    if (!token) {
+        return null;
+    }
+
+    const fetchImpl = options.fetchImpl || fetch;
+    const response = await fetchImpl("/api/cart", {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || result.message || "Unable to resolve cart ID.");
+    }
+
+    const cartId = result.cart?.CartID || result.cart?.CartId;
+    if (cartId && typeof localStorage !== "undefined") {
+        localStorage.setItem("hawkerhub-cart-id", cartId);
+    }
+
+    return cartId || null;
+}
+
+async function syncCartItemQuantity(item, nextQuantity, options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+    const cartItemNo = options.cartItemNo ?? item?.cartItemNo;
+    const cartId = await getCartIdForSync({ ...options, token });
+
+    if (!token || !cartId || typeof cartItemNo === 'undefined' || cartItemNo === null) {
+        return false;
+    }
+
+    const fetchImpl = options.fetchImpl || fetch;
+    const response = await fetchImpl("/api/cart/update", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ cartId, cartItemNo, quantity: nextQuantity })
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || result.message || "Unable to update cart quantity.");
+    }
+
+    return result;
+}
+
+async function syncCartItemRemoval(item, options = {}) {
+    const authData = options.authData || getStoredAuthData();
+    const token = options.token || authData?.token;
+    const cartItemNo = options.cartItemNo ?? item?.cartItemNo;
+    const cartId = await getCartIdForSync({ ...options, token });
+
+    if (!token || !cartId || typeof cartItemNo === 'undefined' || cartItemNo === null) {
+        return false;
+    }
+
+    const fetchImpl = options.fetchImpl || fetch;
+    const response = await fetchImpl("/api/cart/remove", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ cartId, cartItemNo })
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.error || result.message || "Unable to remove cart item.");
+    }
+
+    return result;
+}
+
 // Initialize App DOM Layout Lifecycle Hooks
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     loadCart();
+
+    try {
+        await refreshCartFromServer();
+    } catch (error) {
+        console.error("Unable to refresh cart from server:", error);
+    }
 
     renderMenu();
     updateCartButton();
@@ -176,7 +358,7 @@ function updateCartButton() {
     }
 }
 
-function addToCart(id) {
+async function addToCart(id) {
     const normalizedId = String(id);
     const item = menuItems.find(i => String(i.id) === normalizedId);
     if (!item) return;
@@ -189,24 +371,85 @@ function addToCart(id) {
     }
 
     saveCart();
+
+    const authData = getStoredAuthData();
+    const token = authData?.token;
+    const customerId = authData?.customer?.customerId || authData?.customer?.CustomerID || authData?.customer?.customerID;
+
+    if (token && customerId) {
+        try {
+            const response = await fetch("/api/cart/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    StallID: item.stallID || item.StallID,
+                    ItemCode: item.itemCode || item.ItemCode,
+                    Quantity: 1,
+                    UnitPrice: Number(item.price || item.UnitPrice || 0)
+                })
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(result.error || result.message || "Unable to sync item to cart.");
+            }
+
+            if (result.cartId && typeof localStorage !== "undefined") {
+                localStorage.setItem("hawkerhub-cart-id", result.cartId);
+            }
+
+            if (result.items) {
+                applyServerCartItems(result.items, cartItems);
+            }
+        } catch (error) {
+            console.error("Cart sync error:", error);
+        }
+    }
+
     alert(`${item.name} has been added to the cart.`);
 }
 
-function changeCartQuantity(id, delta) {
-    const item = cartItems.find(cartItem => cartItem.id === id);
+async function changeCartQuantity(id, delta) {
+    const item = cartItems.find(cartItem => String(cartItem.id) === String(id));
     if (!item) return;
 
     const nextQuantity = item.quantity + delta;
-    if (nextQuantity < 1) return;
+    if (nextQuantity < 1) {
+        await removeCartItem(id);
+        return;
+    }
 
     item.quantity = nextQuantity;
     saveCart();
+
+    try {
+        const syncResult = await syncCartItemQuantity(item, item.quantity);
+        if (syncResult?.items) {
+            applyServerCartItems(syncResult.items, cartItems);
+        }
+    } catch (error) {
+        console.error("Cart sync error:", error);
+    }
 }
 
+async function removeCartItem(id) {
+    const item = cartItems.find(cartItem => String(cartItem.id) === String(id));
+    if (!item) return;
 
-function removeCartItem(id) {
-    cartItems = cartItems.filter(cartItem => cartItem.id !== id);
+    cartItems = cartItems.filter(cartItem => String(cartItem.id) !== String(id));
     saveCart();
+
+    try {
+        const syncResult = await syncCartItemRemoval(item);
+        if (syncResult?.items) {
+            applyServerCartItems(syncResult.items, cartItems);
+        }
+    } catch (error) {
+        console.error("Cart sync error:", error);
+    }
 }
 
 function renderCartPage() {

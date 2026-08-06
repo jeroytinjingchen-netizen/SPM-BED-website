@@ -1,6 +1,16 @@
 const sql = require('mssql');
 const dbConfig = require('../dbConfig');
 
+function normalizeCheckoutItems(items = []) {
+  return (items || []).map((it, index) => ({
+    CartItemNo: index + 1,
+    StallID: it.StallID || it.stallID || it.stallId || null,
+    ItemCode: it.ItemCode || it.itemCode || it.itemcode || null,
+    Quantity: Number(it.Quantity || it.quantity || 0),
+    UnitPrice: Number(it.UnitPrice || it.unitPrice || it.price || 0)
+  }));
+}
+
 async function generateNextOrderId() {
   const pool = await sql.connect(dbConfig);
   const result = await pool.request().query("SELECT MAX(OrderID) AS maxId FROM dbo.CustOrder");
@@ -10,7 +20,7 @@ async function generateNextOrderId() {
   return 'ORD' + String(nextNumber).padStart(6, '0');
 }
 
-async function createOrderFromCart(cartId, customerId, paymentType = 'Cash') {
+async function createOrderFromCart(cartId, customerId, paymentType = 'Cash', checkoutItems = []) {
   const pool = await sql.connect(dbConfig);
   const tx = new sql.Transaction(pool);
   try {
@@ -25,11 +35,11 @@ async function createOrderFromCart(cartId, customerId, paymentType = 'Cash') {
     headerReq.input('customerId', sql.Char(9), customerId);
     await headerReq.query(`INSERT INTO dbo.CustOrder (OrderID, OrderDate, PmtType, CustomerID) VALUES (@orderId, @orderDate, @pmtType, @customerId)`);
 
-    const itemsRes = await tx.request()
+    const normalizedItems = normalizeCheckoutItems(checkoutItems);
+    const items = normalizedItems.length > 0 ? normalizedItems : (await tx.request()
       .input('cartId', sql.Char(9), cartId)
-      .query('SELECT CartItemNo, StallID, ItemCode, Quantity, UnitPrice FROM dbo.CartItem WHERE CARTID=@cartId ORDER BY CartItemNo');
+      .query('SELECT CartItemNo, StallID, ItemCode, Quantity, UnitPrice FROM dbo.CartItem WHERE CARTID=@cartId ORDER BY CartItemNo')).recordset || [];
 
-    const items = itemsRes.recordset || [];
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
       const itemReq = tx.request();
@@ -55,5 +65,6 @@ async function createOrderFromCart(cartId, customerId, paymentType = 'Cash') {
 }
 
 module.exports = {
-  createOrderFromCart
+  createOrderFromCart,
+  normalizeCheckoutItems
 };

@@ -145,34 +145,34 @@
     </div>
 
     <!-- ITEM DETAIL MODAL / PAGE VIEW -->
-    <div id="details-view" class="page-view hidden max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <button onclick="navigateTo('menu-view')" class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors group">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div id="details-view" class="page-view details-view hidden">
+        <button onclick="navigateTo('menu-view')" class="details-back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" class="details-back-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Menu Catalog
         </button>
 
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="h-48 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white p-6 relative">
-                <div class="text-center">
-                    <span id="detail-page-badge" class="px-2.5 py-1 text-xs font-bold tracking-wide uppercase rounded-full bg-white/20 text-white mb-2 inline-block">Category</span>
-                    <h1 id="detail-page-title" class="text-3xl font-extrabold tracking-tight">Item Name</h1>
+        <div class="details-card">
+            <div class="details-hero">
+                <div class="details-hero-content">
+                    <span id="detail-page-badge" class="details-badge">Category</span>
+                    <h1 id="detail-page-title" class="details-title">Item Name</h1>
                 </div>
             </div>
-            <div class="p-8 space-y-6">
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Item Description</h3>
-                    <p id="detail-page-description" class="text-gray-600 text-base leading-relaxed">Detailed specification metrics go here.</p>
+            <div class="details-content">
+                <div class="details-section">
+                    <h3 class="details-section-title">Item Description</h3>
+                    <p id="detail-page-description" class="details-description">Detailed specification metrics go here.</p>
                 </div>
-                <div class="grid grid-cols-2 gap-6 border-t border-b border-gray-100 py-6">
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Price SGD</h3>
-                        <span id="detail-page-price" class="text-3xl font-black text-indigo-600">$0.00</span>
+                <div class="details-metrics">
+                    <div class="details-metric">
+                        <h3 class="details-label">Price SGD</h3>
+                        <span id="detail-page-price" class="details-price">$0.00</span>
                     </div>
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Availability Status</h3>
-                        <span id="detail-page-status" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold mt-1">In Stock</span>
+                    <div class="details-metric">
+                        <h3 class="details-label">Availability Status</h3>
+                        <span id="detail-page-status" class="details-status-pill">In Stock</span>
                     </div>
                 </div>
             </div>

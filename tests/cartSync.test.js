@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { syncCartItemQuantity, syncCartItemRemoval } = require('../public/Menu.js');
+const { normalizeCheckoutItems } = require('../models/orderModel');
 
 test('syncCartItemQuantity posts the new quantity to the server cart', async () => {
   const requests = [];
@@ -67,4 +68,28 @@ test('syncCartItemRemoval posts the cart item number to the server cart', async 
     cartId: 'CART123',
     cartItemNo: 7
   }));
+});
+
+test('normalizeCheckoutItems converts the client cart payload into order rows', () => {
+  const normalized = normalizeCheckoutItems([
+    { stallID: 'ST001', itemCode: 'ITEM001', quantity: 2, price: 4.5 },
+    { StallID: 'ST002', ItemCode: 'ITEM002', Quantity: 1, UnitPrice: 6 }
+  ]);
+
+  assert.deepEqual(normalized, [
+    {
+      CartItemNo: 1,
+      StallID: 'ST001',
+      ItemCode: 'ITEM001',
+      Quantity: 2,
+      UnitPrice: 4.5
+    },
+    {
+      CartItemNo: 2,
+      StallID: 'ST002',
+      ItemCode: 'ITEM002',
+      Quantity: 1,
+      UnitPrice: 6
+    }
+  ]);
 });
